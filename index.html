@@ -1825,7 +1825,7 @@ button:focus-visible{outline:2px solid #ef5963;outline-offset:3px}
   <main class="menu-main">
     <div class="menu-top">
       <div class="location-chip"><i></i><span>⌖ SÃO PAULO · BRASIL  /  23°33′S 46°38′W</span></div>
-      <div class="menu-top-right"><button class="quiet-btn" id="quality-menu">GRÁFICOS · ALTO</button><button class="quiet-btn" id="menu-exit">FECHAR MENU ×</button></div>
+      <div class="menu-top-right"><button class="quiet-btn" id="quality-menu">GRÁFICOS · AUTO</button><button class="quiet-btn" id="menu-exit">FECHAR MENU ×</button></div>
     </div>
     <section class="menu-page active" id="page-home">
       <div class="page-eyebrow">SÃO PAULO · A CIDADE EM MOVIMENTO</div>
@@ -2905,7 +2905,7 @@ function createVehicle(type){
     }
     if(scene)scene.fog.far=state.settings.distance==="low"?530:state.settings.distance==="medium"?950:1500;
     $("quality-select").value=value;
-    $("quality-menu").textContent="GRÁFICOS · "+value.toUpperCase();
+    $("quality-menu").textContent=(LOW_MEMORY_MODE?"PERFIL 4 GB · ":"GRÁFICOS · ")+({high:"ALTO",medium:"MÉDIO",low:"BAIXO"}[value]);
     toast("Qualidade gráfica: "+({
       high:"alta", medium:"média", low:"baixa"
     }
