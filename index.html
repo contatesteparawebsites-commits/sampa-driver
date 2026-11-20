@@ -2089,13 +2089,94 @@ button:focus-visible{outline:2px solid #ef5963;outline-offset:3px}
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
   }
-  function createFallbackCity(){
+  function disposeCityRoot(){
+    if(!cityRoot)return;
+    cityRoot.traverse(object=>{
+      if(object.geometry)object.geometry.dispose();
+      if(object.material){
+        const materials=Array.isArray(object.material)?object.material:[object.material];
+        materials.forEach(item=>item.dispose());
+      }
+    });
     cityRoot.clear();
-    state.roadPaths=[];
-    state.blockers=[];
-    state.traffic=[];
-    buildingCount=0;
-    roadCount=0;
+  }
+  function createFallbackCity(){
+    if(!cityRoot)return null;
+    if(state.fallbackActive&&buildingCount>0&&roadCount>0)return {roads:roadCount,buildings:buildingCount,places:state.poiLabels.length};
+    const elements=[];
+    let id=870000000;
+    const angle=.24,cos=Math.cos(angle),sin=Math.sin(angle);
+    const toWorld=(u,v)=>({x:u*cos-v*sin,z:u*sin+v*cos});
+    const toGeoPoint=p=>{const q=geoPoint(p.x,p.z);return {lat:q.lat,lon:q.lon};};
+    const addWay=(tags,points)=>{
+      const geometry=points.map(p=>toGeoPoint(toWorld(p.x,p.z)));
+      elements.push({type:"way",id:id++,tags,geometry});
+    };
+    const addBuilding=(cx,cz,w,d,rotation,tags)=>{
+      const c=Math.cos(rotation),s=Math.sin(rotation);
+      const local=[[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2],[-w/2,-d/2]];
+      const points=local.map(([x,z])=>({x:cx+x*c-z*s,z:cz+x*s+z*c}));
+      addWay(tags,points);
+    };
+    const extent=1120, step=130, samples=[];
+    for(let t=-11;t<=11;t++)samples.push(t*100);
+    for(let n=-7;n<=7;n++){
+      const offset=n*step, major=n===0||n%4===0;
+      const avenue=n===0?"Avenida Paulista":n%2===0?"Avenida dos Bairros "+(n+8):"Rua "+(Math.abs(n)*3+1);
+      const street=n===0?"Rua Augusta":n%2===0?"Rua das Palmeiras "+(n+8):"Rua do Centro "+(Math.abs(n)+1);
+      addWay({highway:major?"primary":"residential",name:avenue},samples.map(x=>({x,z:offset})));
+      addWay({highway:major?"primary":"residential",name:street},samples.map(z=>({x:offset,z})));
+    }
+    const cells=[];
+    for(let ix=-6;ix<=6;ix++)for(let iz=-6;iz<=6;iz++)cells.push({ix,iz,rank:ix*ix+iz*iz});
+    cells.sort((a,b)=>a.rank-b.rank);
+    for(const cell of cells){
+      const {ix,iz}=cell;
+      if(ix===0&&iz===0)continue;
+      const district=Math.max(0,1-Math.hypot(ix,iz)/9);
+      const seed=((ix+19)*73856093)^((iz+23)*19349663)^0x5f3759df;
+      let randomState=seed>>>0;
+      const rnd=()=>{randomState=(randomState*1664525+1013904223)>>>0;return randomState/4294967296;};
+      for(const ox of [-30,30])for(const oz of [-29,29]){
+        const cx=(ix+.5)*step+ox+(rnd()-.5)*8;
+        const cz=(iz+.5)*step+oz+(rnd()-.5)*8;
+        const w=18+rnd()*12,d=20+rnd()*13;
+        const floors=Math.max(2,Math.round(3+rnd()*(5+district*13)));
+        const kindRoll=rnd();
+        const building=kindRoll>.72?"commercial":kindRoll>.36?"apartments":"residential";
+        const name=rnd()>.91?(building==="commercial"?"Galeria Paulista":"Edifício "+(100+Math.floor(rnd()*890))):undefined;
+        const tags={building,"building:levels":String(floors),height:String(Math.round(floors*3.05)), "roof:shape":building==="residential"&&rnd()>.72?"gabled":"flat"};
+        if(name)tags.name=name;
+        if(building==="commercial"&&rnd()>.45)tags.shop="yes";
+        addBuilding(cx,cz,w,d,(rnd()-.5)*.12,tags);
+      }
+    }
+    const park=[{x:8,z:8},{x:122,z:8},{x:122,z:122},{x:8,z:122},{x:8,z:8}];
+    addWay({leisure:"park",name:"Praça Central"},park);
+    for(let i=0;i<42;i++){
+      const local={x:(rndLocal(i,2)-.5)*155,z:(rndLocal(i,7)-.5)*155};
+      const p=toGeoPoint(toWorld(45+local.x,45+local.z));
+      elements.push({type:"node",id:id++,lat:p.lat,lon:p.lon,tags:{natural:"tree"}});
+    }
+    for(let n=0;n<30;n++){
+      const u=-930+(n%10)*205,v=-930+Math.floor(n/10)*205;
+      const p=toGeoPoint(toWorld(u,v));
+      elements.push({type:"node",id:id++,lat:p.lat,lon:p.lon,tags:{highway:"street_lamp"}});
+    }
+    const stores=[["Mercado de Bairro","convenience"],["Padaria Paulista","bakery"],["Café da Esquina","cafe"],["Farmácia Central","pharmacy"]];
+    for(let i=0;i<stores.length;i++){
+      const p=toGeoPoint(toWorld(-60+i*36,18));
+      elements.push({type:"node",id:id++,lat:p.lat,lon:p.lon,tags:{name:stores[i][0],shop:stores[i][1]}});
+    }
+    const stats=createOSMWorld(elements,false);
+    state.fallbackActive=true;
+    state.citySource="local";
+    $("connection-label").textContent="CIDADE LOCAL · RUAS E PRÉDIOS";
+    return stats;
+  }
+  function rndLocal(index,salt){
+    const value=Math.sin(index*127.1+salt*311.7)*43758.5453;
+    return value-Math.floor(value);
   }
 function rand(min, max){
     return min+Math.random()*(max-min)
@@ -2123,8 +2204,8 @@ function rand(min, max){
     const dx=b.x-a.x, dz=b.z-a.z, len=Math.hypot(dx, dz);
     if(len<.2)return;
     const nx=-dz/len*width*.5, nz=dx/len*width*.5;
-    arr.push(a.x+nx, .03, a.z+nz, a.x-nx, .03, a.z-nz, b.x+nx, .03, b.z+nz);
-    arr.push(a.x-nx, .03, a.z-nz, b.x-nx, .03, b.z-nz, b.x+nx, .03, b.z+nz);
+    arr.push(a.x+nx, .03, a.z+nz, b.x+nx, .03, b.z+nz, a.x-nx, .03, a.z-nz);
+    arr.push(a.x-nx, .03, a.z-nz, b.x+nx, .03, b.z+nz, b.x-nx, .03, b.z-nz);
   }
   function addSidewalks(pts, width, collection){
     for(let i=0;
@@ -2199,13 +2280,13 @@ function rand(min, max){
     const minHeight=Math.max(0,Math.min(height-1,parseFloat(tags.min_height)||0));
     const wallHeight=Math.max(1,height-minHeight-roofHeight);
     const geometry=new THREE.ExtrudeGeometry(shapeFromPoints(ring),{depth:wallHeight,bevelEnabled:false,curveSegments:1,steps:1});
-    geometry.rotateX(Math.PI/2);geometry.translate(0,wallHeight+minHeight,0);geometry.computeVertexNormals();
+    geometry.rotateX(-Math.PI/2);geometry.translate(0,minHeight,0);geometry.computeVertexNormals();
     const positions=geometry.toNonIndexed().attributes.position.array,batch=batches[style];
     for(let i=0;i<positions.length;i++)batch.push(positions[i]);
     const floorHeight=style===0?2.75:3.05,floors=Math.max(1,Math.min(45,Math.floor(wallHeight/floorHeight)));
     const spacing=style===0?3.4:style===3?4.1:4.5;
     const windowBase=style===0?.65:1.25,windowHeight=style===0?1.0:1.27;
-    for(let edge=0;edge<ring.length&&details.windows.length<15000;edge++){
+    for(let edge=0;edge<ring.length&&details.windows.length<(LOW_MEMORY_MODE?5200:15000);edge++){
       const a=ring[edge],b=ring[(edge+1)%ring.length],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
       if(len<4)continue;
       const count=Math.min(18,Math.floor(len/spacing));if(!count)continue;
@@ -2217,7 +2298,7 @@ function rand(min, max){
           const width=style===0?Math.min(1.05,len/(count+1)*.45):1.22;
           details.frames.push({x,y:y+.12,z,angle,width:width+.19,height:windowHeight+.22});
           details.windows.push({x,y:y+.12,z,angle,width,height:windowHeight});
-          if(style===1&&row>0&&col%2===0&&details.balconies.length<5000)details.balconies.push({x:x+nx*.18,y:y-.48,z:z+nz*.18,angle,width:Math.min(1.9,width+.5)});
+          if(style===1&&row>0&&col%2===0&&details.balconies.length<(LOW_MEMORY_MODE?1600:5000))details.balconies.push({x:x+nx*.18,y:y-.48,z:z+nz*.18,angle,width:Math.min(1.9,width+.5)});
         }
       }
     }
@@ -2312,7 +2393,9 @@ function rand(min, max){
   }
   function createOSMWorld(elements,append=false){
     if(!append){
-      cityRoot.clear();state.roadPaths=[];state.blockers=[];state.traffic=[];state.poiLabels=[];state.poiIds=new Set();
+      disposeCityRoot();
+      state.roadPaths=[];state.blockers=[];state.traffic=[];state.poiLabels=[];state.poiIds=new Set();
+      buildingCount=0;roadCount=0;
     }
     const firstRoadIndex=state.roadPaths.length;
     const roadVertices=[],markVertices=[],sidewalkVertices=[],sidewalks=[];
@@ -2698,74 +2781,93 @@ function createVehicle(type){
     }
     toast("GPS definido: "+dest.name);
   }
-  function osmQuery(lat,lon,radius){
+  function osmQueries(lat,lon,radius){
+    const near="(around:"+radius+","+lat+","+lon+")";
     const road='["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"]';
     const amenities='["amenity"~"^(restaurant|cafe|bank|pharmacy|fuel|hospital|clinic|school|university|police|post_office|marketplace|fast_food|bar|library|place_of_worship|theatre|cinema|supermarket)$"]';
     const tourism='["tourism"~"^(hotel|museum|attraction|viewpoint|gallery|hostel)$"]';
-    const leisure='["leisure"~"^(park|garden|sports_centre|stadium|playground)$"]';
-    return '[out:json][timeout:28];('+
-      'way'+road+'(around:'+radius+','+lat+','+lon+');'+
-      'way["building"](around:'+radius+','+lat+','+lon+');'+
-      'way["building:part"](around:'+radius+','+lat+','+lon+');'+
-      'way["leisure"~"^(park|garden|playground|sports_centre|stadium)$"](around:'+radius+','+lat+','+lon+');'+
-      'way["landuse"~"^(grass|forest|recreation_ground)$"](around:'+radius+','+lat+','+lon+');'+
-      'way["natural"="water"](around:'+radius+','+lat+','+lon+');'+
-      'node["shop"](around:'+radius+','+lat+','+lon+');'+
-      'way["shop"](around:'+radius+','+lat+','+lon+');'+
-      'node'+amenities+'(around:'+radius+','+lat+','+lon+');'+
-      'way'+amenities+'(around:'+radius+','+lat+','+lon+');'+
-      'node'+tourism+'(around:'+radius+','+lat+','+lon+');'+
-      'way'+tourism+'(around:'+radius+','+lat+','+lon+');'+
-      'node'+leisure+'(around:'+radius+','+lat+','+lon+');'+
-      'way'+leisure+'(around:'+radius+','+lat+','+lon+');'+
-      'node["natural"="tree"](around:'+radius+','+lat+','+lon+');'+
-      'node["highway"="street_lamp"](around:'+radius+','+lat+','+lon+');'+
-      ');out center geom;';
+    return [
+      '[out:json][timeout:24];way'+road+near+';out tags geom;',
+      '[out:json][timeout:24];(way["building"]'+near+';way["building:part"]'+near+';);out tags geom;',
+      '[out:json][timeout:18];(way["leisure"~"^(park|garden|playground|sports_centre|stadium)$"]'+near+';way["landuse"~"^(grass|forest|recreation_ground)$"]'+near+';way["natural"="water"]'+near+';node["shop"]'+near+';way["shop"]'+near+';node'+amenities+near+';way'+amenities+near+';node'+tourism+near+';way'+tourism+near+';node["natural"="tree"]'+near+';node["highway"="street_lamp"]'+near+';);out center geom;'
+    ];
   }
-  async function loadCityChunk(tx,tz,radius=LOW_MEMORY_MODE?850:1150){
+  async function requestOverpass(query,seed=0){
+    const hosts=["https://overpass.kumi.systems/api/interpreter","https://overpass-api.de/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+    let lastError=null;
+    for(let attempt=0;attempt<hosts.length;attempt++){
+      const host=hosts[(seed+attempt)%hosts.length];
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),15000);
+      try{
+        let response;
+        try{
+          response=await fetch(host,{
+            method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+            body:"data="+encodeURIComponent(query),
+            signal:controller.signal,
+            cache:"no-store"
+          });
+        }catch(postError){
+          response=await fetch(host+"?data="+encodeURIComponent(query),{signal:controller.signal,cache:"no-store"});
+        }
+        if(!response.ok)throw new Error("Overpass HTTP "+response.status);
+        const data=await response.json();
+        if(!Array.isArray(data.elements))throw new Error(data.remark||"Resposta cartográfica inválida");
+        return data.elements;
+      }catch(error){
+        lastError=error;
+        console.warn("Servidor cartográfico:",host,error&&error.message||error);
+      }finally{
+        clearTimeout(timer);
+      }
+    }
+    throw lastError||new Error("Todos os servidores cartográficos falharam");
+  }
+  async function loadCityChunk(tx,tz,radius=LOW_MEMORY_MODE?850:1050){
     const key=tx+":"+tz;
     if(state.loadedChunks.has(key)||state.loadingChunks.has(key))return false;
     const retryAt=state.chunkRetry.get(key)||0;
     if(Date.now()<retryAt)return false;
     state.loadingChunks.add(key);
     const centerX=tx*1400,centerZ=tz*1400,ll=geoPoint(centerX,centerZ);
-    const query=osmQuery(ll.lat.toFixed(6),ll.lon.toFixed(6),radius);
-    const hosts=["https://overpass.private.coffee/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass-api.de/api/interpreter"];
     try{
-      let data=null,lastError=null;
-      for(const host of hosts){
-        try{
-          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10500);
-          const response=await fetch(host+"?data="+encodeURIComponent(query),{signal:controller.signal});
-          clearTimeout(timer);
-          if(!response.ok)throw new Error("Overpass HTTP "+response.status);
-          data=await response.json();
-          if(!data.elements||data.elements.length<8)throw new Error("Área sem dados cartográficos suficientes");
-          break;
-        }catch(error){lastError=error;console.warn("Overpass:",error.message)}
-      }
-      if(!data)throw lastError||new Error("Servidores cartográficos indisponíveis");
+      const queries=osmQueries(ll.lat.toFixed(6),ll.lon.toFixed(6),radius);
+      const results=await Promise.allSettled(queries.map((query,index)=>requestOverpass(query,Math.abs(tx*7+tz*11+index)%3)));
+      const received=[];
+      for(const result of results)if(result.status==="fulfilled")received.push(...result.value);
+      const pendingIds=new Set();
       const unique=[];
-      for(const el of data.elements){
+      for(const el of received){
         const id=el.type+"/"+el.id;
-        if(state.loadedElementIds.has(id))continue;
-        state.loadedElementIds.add(id);
+        if(state.loadedElementIds.has(id)||pendingIds.has(id))continue;
+        pendingIds.add(id);
         unique.push(el);
       }
-      if(unique.length){
-        const stats=createOSMWorld(unique,state.loadedChunks.size>0);
-        state.worldReady=true;
-        if(stats.buildings||stats.roads||stats.places){
-          $("connection-label").textContent="OPENSTREETMAP · "+state.loadedChunks.size+" SETORES";
-          toast("Mapa real: "+stats.buildings+" edifícios · "+stats.places+" locais nomeados");
+      const roadWays=unique.filter(el=>el.tags&&el.tags.highway&&el.geometry&&el.geometry.length>1).length;
+      const buildingWays=unique.filter(el=>el.tags&&(el.tags.building||el.tags["building:part"])&&el.geometry&&el.geometry.length>3).length;
+      if(roadWays<4||buildingWays<8)throw new Error("Dados incompletos: "+roadWays+" ruas e "+buildingWays+" prédios");
+      const stats=createOSMWorld(unique,state.loadedChunks.size>0);
+      if(stats.roads<4||stats.buildings<5){
+        if(!state.loadedChunks.size){
+          state.fallbackActive=false;
+          createFallbackCity();
         }
+        throw new Error("Geometrias recebidas não formaram um cenário utilizável");
       }
+      for(const id of pendingIds)state.loadedElementIds.add(id);
       state.loadedChunks.add(key);
       state.chunkRetry.delete(key);
+      state.fallbackActive=false;
+      state.citySource="osm";
+      $("connection-label").textContent="OPENSTREETMAP · "+state.loadedChunks.size+" SETORES";
+      toast("Mapa real carregado · "+stats.roads+" vias e "+stats.buildings+" edifícios");
       return true;
     }catch(error){
       state.chunkRetry.set(key,Date.now()+45000);
       console.warn("Área OSM "+key+":",error&&error.message||error);
+      if(!state.loadedChunks.size&&(!state.fallbackActive||buildingCount===0||roadCount===0))createFallbackCity();
       return false;
     }finally{
       state.loadingChunks.delete(key);
@@ -2773,21 +2875,22 @@ function createVehicle(type){
   }
   async function fetchOSM(){
     const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400);
-    const ok=await loadCityChunk(tx,tz,LOW_MEMORY_MODE?1050:1650);
+    const ok=await loadCityChunk(tx,tz,LOW_MEMORY_MODE?900:1150);
     if(!ok){
-      $("connection-label").textContent="OPENSTREETMAP INDISPONÍVEL";
-      toast("Sem resposta do mapa real. Nenhum prédio fictício será criado.");
-    }else{
-      $("connection-label").textContent="OPENSTREETMAP CONECTADO";
-      updateMap();
+      if(!state.fallbackActive||buildingCount===0||roadCount===0)createFallbackCity();
+      $("connection-label").textContent="CIDADE LOCAL · MAPA ONLINE INDISPONÍVEL";
+      toast("São Paulo local carregada · mapa online indisponível por enquanto");
+      return false;
     }
+    updateMap();
+    return true;
   }
   function ensureCityCoverage(){
-    if(!state.started||state.paused||Date.now()-state.chunkCheckAt<(LOW_MEMORY_MODE?5200:3500))return;
+    if(!state.started||state.paused||Date.now()-state.chunkCheckAt<(LOW_MEMORY_MODE?6000:3800))return;
     state.chunkCheckAt=Date.now();
     const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400),key=tx+":"+tz;
     if(!state.loadedChunks.has(key)&&!state.loadingChunks.has(key)){
-      loadCityChunk(tx,tz,1150).then(ok=>{if(ok)updateMap()});
+      loadCityChunk(tx,tz,LOW_MEMORY_MODE?900:1100).then(ok=>{if(ok)updateMap()});
     }
   }
   function isBlocked(x, z){
@@ -3477,25 +3580,26 @@ function createVehicle(type){
     state.timeMinutes=state.settings.hour*60;
     setTimeLighting();
     createVehicle(state.selected);
+    setBoot(72,"Construindo ruas, quadras e edifícios da cidade…");
+    createFallbackCity();
     state.worldReady=true;
-    setBoot(78, "Cenário inicial pronto · preparando a navegação…");
+    setBoot(88,"Cenário urbano pronto · conectando ao mapa real…");
     if(state.miniMap)setTimeout(()=>state.miniMap.invalidateSize(), 120);
     await new Promise(resolve=>setTimeout(resolve, 260));
     setBoot(100, "Tudo pronto. Boa viagem!");
-    $("connection-label").textContent="SÃO PAULO · PRONTO PARA EXPLORAR";
+    $("connection-label").textContent="CIDADE LOCAL · RUAS E PRÉDIOS";
     $("boot").classList.add("hide");
-    toast("Menu pronto. O mapa real continua carregando em segundo plano.");
-    fetchOSM().then(()=>{
+    toast("Cidade pronta · ruas e edifícios já estão no cenário.");
+    fetchOSM().then(loaded=>{
+      if(!loaded)return;
       createVehicle(state.vehicle);
       updateMap();
       $("connection-label").textContent="OPENSTREETMAP CONECTADO";
-      toast("Ruas e edifícios reais de São Paulo carregados");
-    }
-    ).catch(error=>{
-      console.warn("Mapa online:", error);
-      $("connection-label").textContent="CENÁRIO LOCAL ATIVO";
-    }
-    );
+    }).catch(error=>{
+      console.warn("Mapa online:",error);
+      if(!state.fallbackActive)createFallbackCity();
+      $("connection-label").textContent="CIDADE LOCAL · MAPA ONLINE INDISPONÍVEL";
+    });
   }
   async function ensureLibraries(){
     if(!window.THREE){
