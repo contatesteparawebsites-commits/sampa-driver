@@ -146,6 +146,8 @@ button{cursor:pointer}
 .control-row span{font-size:9px;color:#a9b8bb}
 kbd{font:9px "DM Mono";background:#22323a;border:1px solid #ffffff22;border-bottom-width:2px;border-radius:5px;padding:4px 7px;color:white}
 #game-ui{position:fixed;inset:0;z-index:15;display:none;pointer-events:none}
+#game-ui .hud-left,#game-ui .hud-right{pointer-events:auto}
+#game-ui .hud-card,#game-ui .hud-card *{pointer-events:auto}
 #game-ui.active{display:block}
 .hud-top{position:absolute;top:15px;left:17px;right:17px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .hud-brand{display:flex;align-items:center;gap:9px;background:#071117c7;border:1px solid var(--line);border-radius:11px;padding:8px 11px;backdrop-filter:blur(12px)}
@@ -208,7 +210,7 @@ kbd{font:9px "DM Mono";background:#22323a;border:1px solid #ffffff22;border-bott
 .pause-option{border:1px solid var(--line);border-radius:10px;background:#ffffff08;color:white;padding:13px;text-align:left}
 .pause-option b{display:block;font-size:10px}
 .pause-option small{display:block;color:#82969e;font-size:8px;margin-top:4px}
-#yt-frame{position:fixed;width:200px;height:200px;opacity:.001;left:-260px;bottom:-260px;pointer-events:none;border:0}
+#yt-frame{position:fixed;width:220px;height:140px;opacity:.001;left:-260px;bottom:-260px;pointer-events:none;border:0}
 .leaflet-container{font-family:Manrope,Arial,sans-serif}
 .leaflet-control-attribution{font-size:7px!important}
 .leaflet-popup-content-wrapper{border-radius:8px}
@@ -357,7 +359,7 @@ kbd{font:9px "DM Mono";background:#22323a;border:1px solid #ffffff22;border-bott
 <div class="overlay" id="pause-overlay"><div class="modal-card"><div class="modal-head"><b>PAUSADO · SAMPA DRIVER</b><button class="close-btn" data-close="pause-overlay">VOLTAR ×</button></div><p style="font-size:10px;color:#90a5ac;line-height:1.7">O carro está parado. Escolha o que deseja fazer.</p><div class="pause-grid"><button class="pause-option" id="pause-resume"><b>▶ CONTINUAR DIRIGINDO</b><small>Voltar para a rua</small></button><button class="pause-option" id="pause-garage"><b>▱ TROCAR DE CARRO</b><small>Abrir sua garagem</small></button><button class="pause-option" id="pause-map"><b>⌖ MAPA E GPS</b><small>Escolher outro destino</small></button><button class="pause-option" id="pause-menu"><b>⌂ MENU PRINCIPAL</b><small>Voltar para a tela inicial</small></button></div></div></div>
 <div class="overlay" id="garage-overlay"><div class="modal-card"><div class="modal-head"><b>GARAGEM · ESCOLHA SEU CARRO</b><button class="close-btn" data-close="garage-overlay">FECHAR ×</button></div><div class="garage-grid" id="hud-garage-grid"></div></div></div>
 <div class="toast" id="toast"></div>
-<iframe id="yt-frame" title="Reprodução de áudio da playlist"></iframe>
+<iframe id="yt-frame" title="Reprodução de áudio da playlist" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -839,26 +841,23 @@ async function fetchOSM(){
  let success=false;
  for(let attempt=0;attempt<hosts.length&&!success;attempt++){
   try{
-   setBoot(28+attempt*8,"Baixando geometrias reais das ruas e edifícios…");
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),48000);
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),11500);
    const response=await fetch(hosts[attempt]+"?data="+encodeURIComponent(queries[attempt===0?0:1]),{signal:controller.signal});
    clearTimeout(timer);
    if(!response.ok)throw new Error("Servidor cartográfico respondeu "+response.status);
    const data=await response.json();
    if(!data.elements||data.elements.length<30)throw new Error("Dados cartográficos insuficientes");
-   setBoot(61,"Construindo quarteirões, vias e fachadas 3D…");
+   toast("Dados reais do mapa recebidos · montando a cidade 3D");
    const stats=createOSMWorld(data.elements);
    if(stats.roads<12||stats.buildings<15)throw new Error("Geometria incompleta");
    state.worldReady=true;success=true;
    bootLabel.textContent="OPENSTREETMAP CONECTADO";
-   setBoot(87,"Preparando navegação, tráfego e pontos de referência…");
   }catch(error){console.warn("OSM:",error.message)}
  }
  if(!success){
   createFallbackCity();state.worldReady=true;
   bootLabel.textContent="MODO OFFLINE · CENÁRIO ALTERNATIVO";
-  $("boot-status").textContent="Mapa ao vivo indisponível — cenário local pronto";
-  toast("Não foi possível obter o mapa online. Cenário alternativo carregado.");
+  toast("Mapa online indisponível · você continua podendo jogar no cenário local.");
  }
 }
 function isBlocked(x,z){
@@ -1026,7 +1025,8 @@ function setupTouch(){
  });
 }
 function startDriving(){
- if(!state.worldReady){toast("Aguarde o carregamento do mapa");return}
+ if(!renderer||!scene){toast("O motor 3D não iniciou. Recarregue a página e verifique WebGL.");return}
+ if(!state.worldReady){state.worldReady=true}
  state.vehicle=state.selected;
  createVehicle(state.vehicle);
  state.started=true;state.paused=false;
@@ -1196,10 +1196,20 @@ function syncSettingsUI(){
 }
 function setupEvents(){
  setupNavigation();setupTouch();bindSettings();populateDestinations();
- $("menu-exit").addEventListener("click",startDriving);
+ document.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>button.blur(),{passive:true}));
+ $("menu-exit").addEventListener("click",()=>{
+  if(state.started){$("main-menu").classList.add("hidden");state.paused=false;}
+  else startDriving();
+ });
  $("hud-pause-btn").addEventListener("click",pauseGame);
  $("hud-garage-btn").addEventListener("click",openGarage);
- $("hud-map-btn").addEventListener("click",()=>{pauseGame();showPage("map");$("main-menu").classList.remove("hidden")});
+ $("hud-map-btn").addEventListener("click",()=>{
+  state.paused=true;
+  $("pause-overlay").classList.remove("open");
+  $("main-menu").classList.remove("hidden");
+  showPage("map");
+  if(state.bigMap)setTimeout(()=>state.bigMap.invalidateSize(),180);
+ });
  $("pause-resume").addEventListener("click",resumeGame);
  $("pause-garage").addEventListener("click",()=>{$("pause-overlay").classList.remove("open");openGarage()});
  $("pause-map").addEventListener("click",()=>{$("pause-overlay").classList.remove("open");$("main-menu").classList.remove("hidden");showPage("map")});
@@ -1224,27 +1234,61 @@ function setupEvents(){
  document.addEventListener("visibilitychange",()=>{if(document.hidden&&state.started&&!state.paused)pauseGame()});
 }
 async function boot(){
- setBoot(8,"Inicializando renderizador WebGL…");
+ setBoot(5,"Verificando os recursos gráficos…");
  loadState();
+ await ensureLibraries();
+ setBoot(15,"Inicializando renderizador WebGL…");
+ setupEvents();
  initRenderer();
  renderVehicles();
- setupEvents();
  initAudio();
  initMaps();
  syncSettingsUI();
  applyQuality(state.quality);
- setTimeLighting();
- setBoot(19,"Montando cenário inicial e veículos…");
- await new Promise(resolve=>setTimeout(resolve,250));
- await fetchOSM();
- setBoot(94,"Finalizando interface, garagem e navegação…");
- createVehicle(state.selected);
  state.timeMinutes=state.settings.hour*60;
  setTimeLighting();
- if(state.miniMap)setTimeout(()=>state.miniMap.invalidateSize(),100);
- await new Promise(resolve=>setTimeout(resolve,450));
+ createVehicle(state.selected);
+ state.worldReady=true;
+ setBoot(78,"Cenário inicial pronto · preparando a navegação…");
+ if(state.miniMap)setTimeout(()=>state.miniMap.invalidateSize(),120);
+ await new Promise(resolve=>setTimeout(resolve,260));
  setBoot(100,"Tudo pronto. Boa viagem!");
+ $("connection-label").textContent="CENÁRIO LOCAL PRONTO";
  $("boot").classList.add("hide");
+ toast("Menu pronto. O mapa real continua carregando em segundo plano.");
+ fetchOSM().then(()=>{
+  createVehicle(state.vehicle);
+  updateMap();
+  $("connection-label").textContent="OPENSTREETMAP CONECTADO";
+  toast("Ruas e edifícios reais de São Paulo carregados");
+ }).catch(error=>{
+  console.warn("Mapa online:",error);
+  $("connection-label").textContent="CENÁRIO LOCAL ATIVO";
+ });
+}
+async function ensureLibraries(){
+ if(!window.THREE){
+  const sources=[
+   "https://unpkg.com/three@0.152.2/build/three.min.js",
+   "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"
+  ];
+  for(const source of sources){
+   try{await loadExternalScript(source);if(window.THREE)break}catch(error){console.warn("Three.js:",error.message)}
+  }
+ }
+ if(!window.L){
+  try{await loadExternalScript("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js")}catch(error){console.warn("Leaflet:",error.message)}
+ }
+ if(!window.THREE)throw new Error("Three.js não foi carregado. Verifique sua conexão com a internet.");
+}
+function loadExternalScript(source){
+ return new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src=source;script.async=true;
+  script.onload=()=>resolve();
+  script.onerror=()=>reject(new Error("Falha ao carregar "+source));
+  document.head.appendChild(script);
+ });
 }
 boot().catch(error=>{
  console.error(error);
