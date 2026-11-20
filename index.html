@@ -1835,18 +1835,13 @@ kbd{
     const fill=new THREE.DirectionalLight(0xa5c5d1, .55);
     fill.position.set(100, 45, -140);
     scene.add(fill);
-    const ground=new THREE.Mesh(new THREE.PlaneGeometry(4200, 4200), material(0x657266, 1));
+    const ground=new THREE.Mesh(new THREE.PlaneGeometry(60000, 60000), material(0x657266, 1));
     ground.rotation.x=-Math.PI/2;
     ground.position.y=-.14;
     ground.receiveShadow=true;
     scene.add(ground);
     cityRoot=new THREE.Group();
     scene.add(cityRoot);
-    const grid=new THREE.GridHelper(1800, 90, 0x80928b, 0x80928b);
-    grid.position.y=-.12;
-    grid.material.transparent=true;
-    grid.material.opacity=.08;
-    scene.add(grid);
     createVehicle("fusca");
     clock=new THREE.Clock();
     window.addEventListener("resize", resize);
@@ -2097,6 +2092,10 @@ function rand(min, max){
     for(const el of roadElements){
       const pts=el.geometry.map(g=>worldPoint(g.lat,g.lon));if(pts.length<2)continue;
       const type=el.tags.highway,width=roadWidth(type);state.roadPaths.push(pts);
+      if(el.tags.name){
+        const middle=pts[Math.floor(pts.length/2)];
+        createPlaceLabel(el.tags.name,"RUA / AVENIDA",middle.x,middle.z,6,"road/"+el.type+"/"+el.id);
+      }
       for(let i=0;i<pts.length-1;i++){
         addRoadStrip(roadVertices,pts[i],pts[i+1],width);
         if(i%2===0&&width>=7)addSidewalks([pts[i],pts[i+1]],width,sidewalks);
