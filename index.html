@@ -754,7 +754,7 @@ function setupNavigation(){
  document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>showPage(btn.dataset.page)));
  $("home-garage").addEventListener("click",()=>showPage("garage"));
  $("start-driving").addEventListener("click",startDriving);
- $("menu-exit").addEventListener("click",()=>{toast("Comece seu passeio pela cidade");});
+ 
 }
 function showPage(page){
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
@@ -906,7 +906,7 @@ function toggleCamera(){
 }
 function weatherChange(value){
  state.weather=value;$("weather-rain").classList.toggle("on",value==="rain");
- if(!scene)return;
+ if(!scene||!worldSun)return;
  if(value==="fog"){scene.fog.density=.0024;scene.fog.near=100;scene.fog.far=480}
  else{scene.fog.density=0;scene.fog.near=280;scene.fog.far=state.settings.distance==="low"?550:state.settings.distance==="medium"?950:1500}
  if(value==="cloudy"){worldSun.intensity=1.2;scene.background.setHex(0x788c96);scene.fog.color.setHex(0x788c96)}
@@ -916,7 +916,7 @@ function weatherChange(value){
 function setTimeLighting(){
  const hour=Math.floor(state.timeMinutes/60)%24;
  $("hud-time").textContent=String(hour).padStart(2,"0")+":"+String(Math.floor(state.timeMinutes%60)).padStart(2,"0");
- if(!scene)return;
+ if(!scene||!worldSun)return;
  const night=hour<6||hour>=19,twilight=hour>=17&&hour<19||hour>=5&&hour<7;
  const sky=night?0x152331:twilight?0x889da5:0xa8c4ce;
  scene.background.setHex(sky);scene.fog.color.setHex(sky);
