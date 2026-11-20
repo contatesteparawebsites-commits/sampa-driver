@@ -2154,7 +2154,7 @@ function rand(min, max){
     createRealTrees(treeElements);createRealStreetLamps(lampElements);
     buildingCount+=accepted;roadCount+=roadElements.length;
     createTraffic(state.roadPaths.slice(firstRoadIndex));
-    const spawn=append?null:nearestRoad({x:0,z:0});if(spawn){state.x=spawn.x;state.z=spawn.z}
+    const spawn=append?null:nearestRoad({x:0,z:0});if(spawn&&!state.started){state.x=spawn.x;state.z=spawn.z}
     return {roads:roadElements.length,buildings:accepted,places:poiElements.length};
   }
 function nearestRoad(point){
