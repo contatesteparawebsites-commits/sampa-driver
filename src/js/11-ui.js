@@ -678,6 +678,9 @@ window.SAMPA = {
   buildFallbackCity, buildCityFromOSM, updateSkyLight, setQuality, spawnPlayerModel,
   ensureClearSpawn, nearestRoadPoint,
   get city() { return CITY; },
+  get camera() { return camera; },
+  get scene() { return scene; },
+  get renderer() { return renderer; },
   get player() { return PLAYER; },
   get traffic() { return TRAFFIC; },
   get route() { return state.route; }

@@ -22,7 +22,7 @@ await new Promise((r) => setTimeout(r, 1200));
 await page.evaluate(() => document.querySelector('[data-page="garage"]').click());
 await new Promise((r) => setTimeout(r, 900));
 
-for (const car of ["fusca", "uno", "jeep"]) {
+for (const car of ["fusca", "pocrte", "jeep"]) {
   await page.evaluate((c) => {
     const card = document.querySelector('.car-card[data-car="' + c + '"]');
     if (card) card.click();

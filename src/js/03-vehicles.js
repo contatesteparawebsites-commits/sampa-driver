@@ -7,8 +7,9 @@ function extrudeProfile(points, width, bevel) {
   const shape = new THREE.Shape();
   points.forEach((p, i) => (i ? shape.lineTo(p[0], p[1]) : shape.moveTo(p[0], p[1])));
   shape.closePath();
+  /* o bevel cresce para os dois lados, então o depth recebe só o miolo */
   const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: width, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel,
+    depth: Math.max(0.3, width - bevel * 2), bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel,
     bevelSegments: 3, steps: 1, curveSegments: 4
   });
   geo.rotateY(-Math.PI / 2);
@@ -612,9 +613,126 @@ function buildJeep() {
   };
 }
 
+
+/* ------------------------------------------------------------
+   POCRTE 911 (esportivo de luxo)
+   ------------------------------------------------------------ */
+function buildPocrte() {
+  const spec = CARS.pocrte;
+  const root = new THREE.Group();
+  const body = new THREE.Group();
+  root.add(body);
+  const paint = PHYS(spec.color, { roughness: 0.22, metalness: 0.82, clearcoat: 1, clearcoatRoughness: 0.06 });
+  const carbon = MAT(0x14171a, { roughness: 0.42, metalness: 0.35 });
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x51606b, roughness: 0.05, metalness: 0.35, transparent: true, opacity: 0.62, clearcoat: 1 });
+  const chrome = new THREE.MeshPhysicalMaterial({ color: 0xd8dedd, roughness: 0.12, metalness: 1 });
+  const headMat = basicMat(0xf2f6ff, 0xffffff, 0.55);
+  const tailMat = basicMat(0x8e1518, 0xff2a2a, 0.5);
+  const amberMat = basicMat(0x8a4a12, 0xff9a2a, 0.2);
+
+  /* silhueta fastback baixa */
+  const bodyGeo = extrudeProfile([
+    [-2.12, 0.30], [-2.16, 0.52], [-2.04, 0.66], [-1.60, 0.74], [-1.02, 0.82],
+    [-0.60, 0.90], [-0.26, 1.18], [0.26, 1.24], [0.70, 1.14], [1.12, 0.96],
+    [1.60, 0.86], [1.94, 0.74], [2.08, 0.56], [2.04, 0.34], [1.66, 0.24], [-1.66, 0.24]
+  ], 1.84, 0.1);
+  addMesh(body, bodyGeo, paint, [0, 0, 0]);
+
+  /* vidros */
+  addMesh(body, new THREE.PlaneGeometry(1.3, 0.42), glass, [0, 1.06, -0.66], [-0.72, 0, 0]);
+  addMesh(body, new THREE.PlaneGeometry(1.24, 0.36), glass, [0, 1.1, 0.62], [0.92, 0, 0]);
+  for (const x of [-0.905, 0.905]) {
+    addMesh(body, new THREE.PlaneGeometry(0.92, 0.3), glass, [x, 1.06, -0.12], [0, Math.PI / 2, 0]);
+  }
+  /* frisos pretos das janelas */
+  for (const x of [-0.9, 0.9]) addMesh(body, new THREE.BoxGeometry(0.012, 0.34, 1.0), carbon, [x, 1.05, -0.12]);
+
+  /* faróis full-LED */
+  for (const x of [-0.62, 0.62]) {
+    const l = addMesh(body, new THREE.BoxGeometry(0.42, 0.12, 0.1), headMat, [x, 0.72, -2.02], [0.22, 0, 0]);
+    l.userData.headlight = true;
+    addMesh(body, new THREE.BoxGeometry(0.46, 0.05, 0.06), carbon, [x, 0.64, -2.03]);
+  }
+  /* entrada de ar e splitter */
+  addMesh(body, new THREE.BoxGeometry(1.1, 0.16, 0.08), carbon, [0, 0.46, -2.04]);
+  addMesh(body, new THREE.BoxGeometry(1.7, 0.05, 0.34), carbon, [0, 0.26, -1.96]);
+  /* lanternas em barra (assinatura 911) */
+  addMesh(body, new THREE.BoxGeometry(1.62, 0.1, 0.07), tailMat, [0, 0.8, 2.06]);
+  for (const x of [-0.5, 0.5]) addMesh(body, new THREE.BoxGeometry(0.24, 0.05, 0.08), amberMat, [x, 0.68, 2.06]);
+  /* aerofólio traseiro */
+  const wing = new THREE.Group();
+  wing.position.set(0, 1.02, 1.62);
+  addMesh(wing, new THREE.BoxGeometry(1.62, 0.04, 0.3), carbon, [0, 0, 0], [0.14, 0, 0]);
+  for (const x of [-0.62, 0.62]) addMesh(wing, new THREE.BoxGeometry(0.06, 0.22, 0.16), carbon, [x, -0.12, 0.02]);
+  body.add(wing);
+  /* difusor + escapes duplos */
+  addMesh(body, new THREE.BoxGeometry(1.5, 0.14, 0.2), carbon, [0, 0.3, 2.02]);
+  for (const x of [-0.34, 0.34]) addMesh(body, new THREE.CylinderGeometry(0.07, 0.07, 0.16, 10), chrome, [x, 0.32, 2.12], [Math.PI / 2, 0, 0]);
+  /* retrovisores */
+  for (const x of [-0.94, 0.94]) {
+    addMesh(body, new THREE.CylinderGeometry(0.02, 0.02, 0.12, 6), carbon, [x, 0.98, -0.6], [0, 0, Math.PI / 2]);
+    addMesh(body, new THREE.BoxGeometry(0.1, 0.08, 0.18), paint, [x * 1.12, 1.0, -0.6]);
+  }
+  /* soleiras laterais */
+  for (const x of [-0.92, 0.92]) addMesh(body, new THREE.BoxGeometry(0.06, 0.12, 2.2), carbon, [x, 0.34, 0]);
+
+  /* rodas largas */
+  const wheels = [];
+  const axles = [{ z: -1.33, r: 0.35, w: 0.3, front: true }, { z: 1.36, r: 0.38, w: 0.36, front: false }];
+  for (const ax of axles) {
+    for (const side of [-1, 1]) {
+      const holder = new THREE.Group();
+      holder.position.set(side * 0.82, ax.r, ax.z);
+      const w = makeWheel(ax.r, ax.w, { rimMat: new THREE.MeshPhysicalMaterial({ color: 0x2a2f33, roughness: 0.3, metalness: 0.95, clearcoat: 0.6 }) });
+      holder.add(w);
+      body.add(holder);
+      wheels.push({ holder, wheel: w, front: ax.front, radius: ax.r });
+    }
+  }
+
+  /* interior */
+  const interior = new THREE.Group();
+  interior.visible = false;
+  const leather = MAT(0x1e1a17, { roughness: 0.82 });
+  addMesh(interior, new THREE.BoxGeometry(0.44, 0.14, 0.44), leather, [-0.34, 0.68, 0.12]);
+  addMesh(interior, new THREE.BoxGeometry(0.44, 0.52, 0.12), leather, [-0.34, 0.92, 0.36], [-0.16, 0, 0]);
+  addMesh(interior, new THREE.BoxGeometry(0.44, 0.12, 0.42), leather, [0.34, 0.68, 0.12]);
+  addMesh(interior, new THREE.BoxGeometry(0.44, 0.48, 0.11), leather, [0.34, 0.9, 0.36], [-0.14, 0, 0]);
+  addMesh(interior, new THREE.BoxGeometry(1.14, 0.16, 0.46), MAT(0x101214, { roughness: 0.7 }), [0, 0.94, -0.62]);
+  const sw = new THREE.Group();
+  sw.position.set(-0.34, 0.96, -0.44);
+  sw.rotation.x = -0.26;
+  addMesh(sw, new THREE.TorusGeometry(0.15, 0.023, 6, 20), MAT(0x0e1012, { roughness: 0.6 }));
+  addMesh(sw, new THREE.BoxGeometry(0.27, 0.02, 0.03), MAT(0x0e1012));
+  addMesh(sw, new THREE.BoxGeometry(0.03, 0.14, 0.03), MAT(0x0e1012));
+  interior.add(sw);
+  addMesh(interior, new THREE.BoxGeometry(0.34, 0.02, 0.06), MAT(0x2a3238), [0, 1.0, -0.66]);
+  body.add(interior);
+
+  const lights = [];
+  for (const x of [-0.6, 0.6]) {
+    const sp = new THREE.SpotLight(0xeef4ff, 0, 120, 0.38, 0.5, 1.1);
+    sp.position.set(x, 0.74, -2.02);
+    sp.target.position.set(x * 1.4, 0.1, -32);
+    body.add(sp); body.add(sp.target);
+    lights.push(sp);
+  }
+
+  const shadow = blobShadow(1.15);
+  root.add(shadow);
+
+  return {
+    root, body, wheels, lights, interior, steerWheel: sw, glassParts: [glass],
+    eye: new THREE.Vector3(-0.34, 1.12, -0.28), seatZ: 0.12,
+    mats: { headMat, tailMat, amberMat, paint },
+    shadow
+  };
+}
+
 function buildVehicle(type) {
   if (type === "uno") return buildUno();
   if (type === "jeep") return buildJeep();
+  if (type === "pocrte") return buildPocrte();
   return buildFusca();
 }
 

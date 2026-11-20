@@ -93,7 +93,7 @@ const DISTRICTS = {
   }
 };
 
-const CAR_LIST = ["fusca", "uno", "jeep"];
+const CAR_LIST = ["fusca", "uno", "jeep", "pocrte"];
 
 const CARS = {
   fusca: {
@@ -109,6 +109,20 @@ const CARS = {
     engine: "1.3 BOXER", driveTag: "TRASEIRA", gearCount: 4, power: 46,
     bars: { speed: 52, accel: 58, grip: 68, weight: 34 },
     sound: { style: "boxer", idle: 620, redline: 4200, hp: 380, hp2: 190, horn: [392, 494], loud: 0.62 }
+  },
+  pocrte: {
+    id: "pocrte",
+    name: "Pocrte 911",
+    model: "Pocrte 911 Turbo S · 2024",
+    kind: "esportivo de luxo",
+    color: 0x9ba3a8,
+    css: "#b9c2c6",
+    accent: "#f2f6f4",
+    desc: "Seis cilindros opostos, biturbo e acabamento de couro. Um míssil alemão com jeito de São Paulo: rápido demais para a Marginal, elegante demais para passar despercebido.",
+    maxKmh: 330, accel: 15.5, brake: 26, handbrake: 24, grip: 1.42, mass: 1640,
+    engine: "3.8 FLAT-6 BITURBO", driveTag: "INTEGRAL", gearCount: 7, power: 650,
+    bars: { speed: 99, accel: 96, grip: 94, weight: 72 },
+    sound: { style: "flat6", idle: 780, redline: 7200, hp: 620, hp2: 310, horn: [440, 554], loud: 0.86 }
   },
   uno: {
     id: "uno",

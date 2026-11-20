@@ -387,7 +387,7 @@ function initRenderer() {
 
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(6200, 6200),
-    new THREE.MeshStandardMaterial({ map: TEXCACHE.ground, color: 0x8f968c, roughness: 1 })
+    new THREE.MeshStandardMaterial({ map: TEXCACHE.ground, color: 0x76766e, roughness: 1 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.06;

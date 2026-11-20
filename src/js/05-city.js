@@ -14,9 +14,9 @@ const ROAD_DRIVABLE = {
   unclassified: 1, residential: 1, living_street: 1, service: 1
 };
 const ROAD_COLOR = {
-  motorway: 0x30353a, trunk: 0x33383c, primary: 0x353a3e, secondary: 0x383d41,
-  tertiary: 0x3a3f43, residential: 0x3c4145, unclassified: 0x3a3f43,
-  living_street: 0x41464a, service: 0x404549, pedestrian: 0x6a6a63, footway: 0x77776e
+  motorway: 0x24282b, trunk: 0x26292c, primary: 0x282c2f, secondary: 0x2a2e31,
+  tertiary: 0x2c3033, residential: 0x2e3235, unclassified: 0x2c3033,
+  living_street: 0x32363a, service: 0x313538, pedestrian: 0x55554f, footway: 0x6a6a63
 };
 
 let CITY = {
@@ -135,8 +135,11 @@ function pushRoof(out, ring, y, uvScale) {
   let tris;
   try { tris = THREE.ShapeUtils.triangulateShape(contour, []); } catch (e) { return; }
   for (const t of tris) {
-    const a = ring[t[0]], b = ring[t[1]], c = ring[t[2]];
+    let a = ring[t[0]], b = ring[t[1]], c = ring[t[2]];
     if (!a || !b || !c) continue;
+    /* garante winding anti-horário visto de cima (senão a laje é iluminada por baixo) */
+    const cross = (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+    if (cross > 0) { const tmp = b; b = c; c = tmp; }
     out.pos.push(a.x, y, a.z, b.x, y, b.z, c.x, y, c.z);
     out.nor.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
     out.uv.push(a.x / (uvScale || 8), a.z / (uvScale || 8), b.x / (uvScale || 8), b.z / (uvScale || 8), c.x / (uvScale || 8), c.z / (uvScale || 8));
@@ -166,7 +169,7 @@ function makeBuildingMaterials() {
     return m;
   });
   CITY.roofMat = new THREE.MeshStandardMaterial({ map: TEXCACHE.roof, color: 0x9d9e98, roughness: 0.96, side: THREE.DoubleSide });
-  CITY.sidewalkMat = new THREE.MeshStandardMaterial({ map: TEXCACHE.sidewalk, color: 0xb8b8b0, roughness: 0.94 });
+  CITY.sidewalkMat = new THREE.MeshStandardMaterial({ map: TEXCACHE.sidewalk, color: 0xa8aaa4, roughness: 0.95, side: THREE.DoubleSide });
   WORLD.asphaltMats = [];
 }
 
@@ -176,8 +179,9 @@ function asphaltMaterial(type) {
   const m = new THREE.MeshStandardMaterial({
     map: TEXCACHE.asphalt,
     color: ROAD_COLOR[key] || 0x3a3f43,
-    roughness: state.settings.weather === "rain" ? 0.42 : 0.92,
-    metalness: state.settings.weather === "rain" ? 0.22 : 0.02
+    roughness: state.settings.weather === "rain" ? 0.4 : 0.9,
+    metalness: state.settings.weather === "rain" ? 0.25 : 0.03,
+    side: THREE.DoubleSide
   });
   m.map.repeat.set(1, 1);
   CITY.roadMats[key] = m;
@@ -208,16 +212,41 @@ function nearestRoadPoint(x, z) {
   return { x: best.x, z: best.z, yaw, dist: Math.sqrt(bestD) };
 }
 
+function pickSpawnPoint() {
+  const zones = state.landmarkZones || [];
+  const paths = state.roadPaths || [];
+  let best = null, bestScore = -Infinity;
+  for (let k = 0; k < paths.length; k += 1) {
+    const path = paths[k];
+    for (let i = 0; i < path.length; i += Math.max(1, Math.floor(path.length / 8))) {
+      const p = path[i];
+      const d0 = Math.hypot(p.x, p.z);
+      if (d0 < 70 || d0 > 320) continue;
+      let clear = Infinity;
+      for (const z of zones) clear = Math.min(clear, Math.hypot(p.x - z.x, p.z - z.z) - (z.r || 40));
+      if (blockersNear(state.blockers, p.x, p.z, 2.8).length) continue;
+      const score = Math.min(clear, 90) - Math.abs(d0 - 140) * 0.25;
+      if (score > bestScore) {
+        const a2 = path[Math.max(0, i - 1)], b2 = path[Math.min(path.length - 1, i + 1)];
+        const yaw = Math.atan2(-(b2.x - a2.x), -(b2.z - a2.z));
+        bestScore = score;
+        best = { x: p.x, z: p.z, yaw };
+      }
+    }
+  }
+  return best;
+}
+
 function ensureClearSpawn(force) {
   if (!state.blockers) return false;
   const blocked = blockersNear(state.blockers, state.x, state.z, 2.6).length > 0;
   if (!force && !blocked) return false;
-  const rp = nearestRoadPoint(state.x, state.z);
+  const rp = (force ? pickSpawnPoint() : null) || nearestRoadPoint(state.x, state.z);
   if (!rp) return false;
   if (!force && rp.dist > 900) return false;
   state.x = rp.x;
   state.z = rp.z;
-  if (force) state.yaw = rp.yaw;
+  if (force && Number.isFinite(rp.yaw)) state.yaw = rp.yaw;
   state.vx = 0; state.vz = 0; state.speed = 0;
   if (typeof PLAYER !== "undefined" && PLAYER && PLAYER.model) {
     PLAYER.model.root.position.set(state.x, 0, state.z);
@@ -867,7 +896,7 @@ function buildFallbackCity(district) {
   const wg = batchToGeometry(walkBatch);
   if (wg) { const m = new THREE.Mesh(wg, CITY.sidewalkMat); m.receiveShadow = true; cityRoot.add(m); }
   const mg = batchToGeometry(markBatch);
-  if (mg) cityRoot.add(new THREE.Mesh(mg, new THREE.MeshStandardMaterial({ color: 0xe8e6d6, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 })));
+  if (mg) cityRoot.add(new THREE.Mesh(mg, new THREE.MeshStandardMaterial({ color: 0xe8e6d6, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2, side: THREE.DoubleSide })));
 
   /* park ground */
   {
