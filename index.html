@@ -208,7 +208,7 @@ kbd{font:9px "DM Mono";background:#22323a;border:1px solid #ffffff22;border-bott
 .pause-option{border:1px solid var(--line);border-radius:10px;background:#ffffff08;color:white;padding:13px;text-align:left}
 .pause-option b{display:block;font-size:10px}
 .pause-option small{display:block;color:#82969e;font-size:8px;margin-top:4px}
-#yt-frame{position:fixed;width:1px;height:1px;opacity:.01;left:-20px;bottom:-20px;pointer-events:none;border:0}
+#yt-frame{position:fixed;width:200px;height:200px;opacity:.001;left:-260px;bottom:-260px;pointer-events:none;border:0}
 .leaflet-container{font-family:Manrope,Arial,sans-serif}
 .leaflet-control-attribution{font-size:7px!important}
 .leaflet-popup-content-wrapper{border-radius:8px}
@@ -379,9 +379,9 @@ const DESTS=[
  {id:"se",name:"Praça da Sé",lat:-23.5505,lon:-46.6333}
 ];
 const CARS={
- fusca:{name:"Fusca clássico",short:"Fusca",desc:"Azul-escuro · boxer 1.3 · compacto clássico",color:0x142e50,colorName:"AZUL NOTURNO",engine:"1.3L BOXER",power:36,max:38,accel:5.6,steer:1.12,weight:850,emoji:"🚙"},
- uno:{name:"Fiat Uno com escada",short:"Uno Escada",desc:"Branco · motor 1.0 · escada no teto",color:0xe7e8df,colorName:"BRANCO",engine:"1.0L FIRE",power:55,max:47,accel:6.4,steer:1.25,weight:920,emoji:"🚗"},
- jeep:{name:"Jipe 4×4",short:"Jipe 4×4",desc:"Verde floresta · tração integral · aventureiro",color:0x315b36,colorName:"VERDE FLORESTA",engine:"2.0L 4×4",power:115,max:54,accel:8.1,steer:.94,weight:1450,emoji:"🚙"}
+ fusca:{name:"Fusca clássico",short:"Fusca",desc:"Azul-escuro · boxer 1.3 · compacto clássico",color:0x142e50,colorName:"AZUL NOTURNO",engine:"1.3L BOXER",power:36,max:110,accel:5.6,steer:1.12,weight:850,emoji:"🚙"},
+ uno:{name:"Fiat Uno com escada",short:"Uno Escada",desc:"Branco · motor 1.0 · escada no teto",color:0xe7e8df,colorName:"BRANCO",engine:"1.0L FIRE",power:55,max:135,accel:6.4,steer:1.25,weight:920,emoji:"🚗"},
+ jeep:{name:"Jipe 4×4",short:"Jipe 4×4",desc:"Verde floresta · tração integral · aventureiro",color:0x315b36,colorName:"VERDE FLORESTA",engine:"2.0L 4×4",power:115,max:150,accel:8.1,steer:.94,weight:1450,emoji:"🚙"}
 };
 const DEFAULTS={quality:"high",shadows:true,distance:"high",weather:"clear",timeDynamic:true,hour:16,engine:true,sfx:.55,assist:true,save:true};
 const state={
@@ -605,7 +605,7 @@ function createStreetFurniture(){
  const bulbMat=new THREE.MeshStandardMaterial({color:0xffe7b7,emissive:0xffd18a,emissiveIntensity:.7});
  const instTrunk=new THREE.InstancedMesh(trunkGeo,trunkMat,700);
  const instCrown=leafMats.map(m=>new THREE.InstancedMesh(crownGeo,m,700));
- const dummy=new THREE.Object3D();let treeCount=0;
+ const crownCounts=[0,0,0],dummy=new THREE.Object3D();let treeCount=0;
  for(const path of state.roadPaths){
   if(path.length<2)continue;
   const stride=path.length>15?3:1;
@@ -620,14 +620,14 @@ function createStreetFurniture(){
     const z=b.z+nz*side*(roadWidth("residential")/2+5+rand(0,3));
     if(state.blockers.some(o=>x>o.minX-3&&x<o.maxX+3&&z>o.minZ-3&&z<o.maxZ+3))continue;
     dummy.position.set(x,1.2,z);dummy.scale.set(1,rand(.8,1.35),1);dummy.updateMatrix();instTrunk.setMatrixAt(treeCount,dummy.matrix);
-    dummy.position.set(x,4+rand(-.3,.9),z);const s=rand(1.8,3.4);dummy.scale.set(s,s,s);dummy.updateMatrix();instCrown[treeCount%3].setMatrixAt(treeCount,dummy.matrix);
+    const crownIndex=treeCount%3;dummy.position.set(x,4+rand(-.3,.9),z);const s=rand(1.8,3.4);dummy.scale.set(s,s,s);dummy.updateMatrix();instCrown[crownIndex].setMatrixAt(crownCounts[crownIndex]++,dummy.matrix);
     treeCount++;
    }
   }
   if(treeCount>620)break;
  }
  instTrunk.count=treeCount;instTrunk.instanceMatrix.needsUpdate=true;cityRoot.add(instTrunk);
- instCrown.forEach(m=>{m.count=treeCount;m.instanceMatrix.needsUpdate=true;cityRoot.add(m)});
+ instCrown.forEach((m,i)=>{m.count=crownCounts[i];m.instanceMatrix.needsUpdate=true;cityRoot.add(m)});
  for(let i=0;i<Math.min(90,state.roadPaths.length*2);i++){
   const path=state.roadPaths[i%state.roadPaths.length];if(path.length<3)continue;
   const p=path[Math.floor(path.length*.5)],a=path[Math.max(0,Math.floor(path.length*.5)-1)],b=path[Math.min(path.length-1,Math.floor(path.length*.5)+1)];
@@ -726,7 +726,7 @@ function syncVehicleUI(){
  $("hud-car-name").textContent=v.name;$("hud-engine").textContent=v.engine;
  $("hud-gear").textContent=state.gear;$("hud-condition").textContent=Math.round(state.condition)+"%";
 }
-function vehicleCard(type,compact){
+function vehicleCard(type,compact,inGame){
  const v=CARS[type],selected=state.selected===type;
  const div=document.createElement("article");
  div.className=compact?"car-card"+(selected?" selected":""):"garage-card";
@@ -737,8 +737,7 @@ function vehicleCard(type,compact){
  }
  div.addEventListener("click",()=>{
   state.selected=type;
-  document.querySelectorAll(".car-card").forEach(x=>x.classList.remove("selected"));
-  if(compact)div.classList.add("selected");
+  if(inGame){createVehicle(type);closeOverlay("garage-overlay");resumeGame()}
   renderVehicles();
   toast(v.name+" selecionado");
  });
@@ -748,7 +747,7 @@ function renderVehicles(){
  const home=$("home-car-grid"),garage=$("garage-grid"),hud=$("hud-garage-grid");
  home.innerHTML="";garage.innerHTML="";hud.innerHTML="";
  Object.keys(CARS).forEach(type=>{
-  home.appendChild(vehicleCard(type,true));garage.appendChild(vehicleCard(type,false));hud.appendChild(vehicleCard(type,false));
+  home.appendChild(vehicleCard(type,true,false));garage.appendChild(vehicleCard(type,false,false));hud.appendChild(vehicleCard(type,false,true));
  });
 }
 function setupNavigation(){
@@ -835,8 +834,8 @@ async function calculateRoute(id){
 async function fetchOSM(){
  const bootLabel=$("connection-label");
  const queries=[
-  '[out:json][timeout:40];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"](around:1550,-23.5614,-46.6559);way["building"](around:1250,-23.5614,-46.6559););out geom;',
-  '[out:json][timeout:40];(way["highway"](around:1150,-23.5614,-46.6559);way["building"](around:950,-23.5614,-46.6559););out geom;'
+  '[out:json][timeout:40];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"](around:2150,-23.5614,-46.6559);way["building"](around:1750,-23.5614,-46.6559););out geom;',
+  '[out:json][timeout:40];(way["highway"](around:1500,-23.5614,-46.6559);way["building"](around:1250,-23.5614,-46.6559););out geom;'
  ];
  const hosts=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.nchc.org.tw/api/interpreter"];
  let success=false;
@@ -958,7 +957,7 @@ function updateDriving(dt){
  state.speed+=throttle*dt;
  if(!forward)state.speed*=Math.pow(.987,dt*60);
  if(handbrake)state.speed*=Math.pow(.83,dt*60);
- state.speed=Math.max(-v.max*.28,Math.min(v.max,state.speed));
+ state.speed=Math.max(-v.max*.28/3.6,Math.min(v.max/3.6,state.speed));
  if(Math.abs(state.speed)<.06&&!forward)state.speed=0;
  const steerFactor=(.25+Math.min(Math.abs(state.speed)/17,1.45))*v.steer*grip;
  state.yaw-=turn*steerFactor*dt*Math.sign(state.speed||1);
