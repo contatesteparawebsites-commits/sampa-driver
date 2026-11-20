@@ -2106,7 +2106,7 @@ button:focus-visible{outline:2px solid #ef5963;outline-offset:3px}
     const elements=[];
     let id=870000000;
     const angle=.24,cos=Math.cos(angle),sin=Math.sin(angle);
-    const toWorld=(u,v)=>({x:u*cos-v*sin,z:u*sin+v*cos});
+    const toWorld=(u,v)=>({x:state.x+u*cos-v*sin,z:state.z+u*sin+v*cos});
     const toGeoPoint=p=>{const q=geoPoint(p.x,p.z);return {lat:q.lat,lon:q.lon};};
     const addWay=(tags,points)=>{
       const geometry=points.map(p=>toGeoPoint(toWorld(p.x,p.z)));
@@ -2464,7 +2464,7 @@ function rand(min, max){
     createRealTrees(treeElements.slice(0,LOW_MEMORY_MODE?110:420));createRealStreetLamps(lampElements.slice(0,LOW_MEMORY_MODE?70:220));
     buildingCount+=accepted;roadCount+=roadElements.length;
     createTraffic(state.roadPaths.slice(firstRoadIndex));
-    const spawn=append?null:nearestRoad({x:0,z:0});if(spawn&&!state.started){state.x=spawn.x;state.z=spawn.z}
+    const spawn=append?null:nearestRoad({x:state.x,z:state.z});if(spawn&&!state.started){state.x=spawn.x;state.z=spawn.z}
     return {roads:roadElements.length,buildings:accepted,places:poiElements.length};
   }
 function nearestRoad(point){
@@ -2499,7 +2499,7 @@ function createTraffic(paths=state.roadPaths){
       const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.43,.62,1.72),material(0x263c45,.28,.05));cabin.position.set(0,1.39,-.14);group.add(cabin);
       const wheelMat=material(0x171b1d,1);
       for(const x of [-.83,.83])for(const z of [-1.05,1.05]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.18,10),wheelMat);wheel.rotation.z=Math.PI/2;wheel.position.set(x,.43,z);group.add(wheel)}
-      const point=path[Math.floor(rand(1,path.length-2))];group.position.set(point.x,0,point.z);scene.add(group);
+      const point=path[Math.floor(rand(1,path.length-2))];group.position.set(point.x,0,point.z);cityRoot.add(group);
       state.traffic.push({group,path,index:Math.floor(rand(0,path.length-2)),t:rand(0,1),speed:rand(2.1,5.7)});
     }
   }
