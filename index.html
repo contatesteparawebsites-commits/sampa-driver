@@ -835,7 +835,7 @@ async function fetchOSM(){
   '[out:json][timeout:40];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"](around:2150,-23.5614,-46.6559);way["building"](around:1750,-23.5614,-46.6559););out geom;',
   '[out:json][timeout:40];(way["highway"](around:1500,-23.5614,-46.6559);way["building"](around:1250,-23.5614,-46.6559););out geom;'
  ];
- const hosts=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.nchc.org.tw/api/interpreter"];
+ const hosts=["https://overpass.private.coffee/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass-api.de/api/interpreter"];
  let success=false;
  for(let attempt=0;attempt<hosts.length&&!success;attempt++){
   try{
