@@ -2792,29 +2792,28 @@ function createVehicle(type){
       '[out:json][timeout:18];(way["leisure"~"^(park|garden|playground|sports_centre|stadium)$"]'+near+';way["landuse"~"^(grass|forest|recreation_ground)$"]'+near+';way["natural"="water"]'+near+';node["shop"]'+near+';way["shop"]'+near+';node'+amenities+near+';way'+amenities+near+';node'+tourism+near+';way'+tourism+near+';node["natural"="tree"]'+near+';node["highway"="street_lamp"]'+near+';);out center geom;'
     ];
   }
-  async function requestOverpass(query,seed=0){
-    const hosts=["https://overpass.kumi.systems/api/interpreter","https://overpass-api.de/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+  async function requestOverpass(query){
+    const hosts=[
+      "https://overpass.private.coffee/api/interpreter",
+      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+      "https://overpass-api.de/api/interpreter"
+    ];
     let lastError=null;
-    for(let attempt=0;attempt<hosts.length;attempt++){
-      const host=hosts[(seed+attempt)%hosts.length];
+    for(const host of hosts){
       const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),15000);
+      const timer=setTimeout(()=>controller.abort(),26000);
       try{
-        let response;
-        try{
-          response=await fetch(host,{
-            method:"POST",
-            headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
-            body:"data="+encodeURIComponent(query),
-            signal:controller.signal,
-            cache:"no-store"
-          });
-        }catch(postError){
-          response=await fetch(host+"?data="+encodeURIComponent(query),{signal:controller.signal,cache:"no-store"});
-        }
+        const response=await fetch(host,{
+          method:"POST",
+          headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+          body:new URLSearchParams({data:query}),
+          signal:controller.signal,
+          cache:"no-store"
+        });
         if(!response.ok)throw new Error("Overpass HTTP "+response.status);
         const data=await response.json();
-        if(!Array.isArray(data.elements))throw new Error(data.remark||"Resposta cartográfica inválida");
+        if(data.remark)throw new Error(String(data.remark));
+        if(!Array.isArray(data.elements))throw new Error("Resposta cartográfica inválida");
         return data.elements;
       }catch(error){
         lastError=error;
@@ -2834,9 +2833,9 @@ function createVehicle(type){
     const centerX=tx*1400,centerZ=tz*1400,ll=geoPoint(centerX,centerZ);
     try{
       const queries=osmQueries(ll.lat.toFixed(6),ll.lon.toFixed(6),radius);
-      const results=await Promise.allSettled(queries.map((query,index)=>requestOverpass(query,Math.abs(tx*7+tz*11+index)%3)));
+      const coreResults=await Promise.allSettled(queries.slice(0,2).map(query=>requestOverpass(query)));
       const received=[];
-      for(const result of results)if(result.status==="fulfilled")received.push(...result.value);
+      for(const result of coreResults)if(result.status==="fulfilled")received.push(...result.value);
       const pendingIds=new Set();
       const unique=[];
       for(const el of received){
@@ -2848,6 +2847,18 @@ function createVehicle(type){
       const roadWays=unique.filter(el=>el.tags&&el.tags.highway&&el.geometry&&el.geometry.length>1).length;
       const buildingWays=unique.filter(el=>el.tags&&(el.tags.building||el.tags["building:part"])&&el.geometry&&el.geometry.length>3).length;
       if(roadWays<4||buildingWays<8)throw new Error("Dados incompletos: "+roadWays+" ruas e "+buildingWays+" prédios");
+      try{
+        const extras=await requestOverpass(queries[2]);
+        for(const el of extras){
+          const id=el.type+"/"+el.id;
+          if(!state.loadedElementIds.has(id)&&!pendingIds.has(id)){
+            pendingIds.add(id);
+            unique.push(el);
+          }
+        }
+      }catch(extraError){
+        console.warn("Detalhes opcionais do mapa:",extraError&&extraError.message||extraError);
+      }
       const stats=createOSMWorld(unique,state.loadedChunks.size>0);
       if(stats.roads<4||stats.buildings<5){
         if(!state.loadedChunks.size){
