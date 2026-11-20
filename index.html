@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b1118">
+<title>Sampa Driver — Roleplay São Paulo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0b1118;--panel:rgba(13,21,29,.88);--panel2:rgba(20,31,41,.92);--line:rgba(210,229,242,.12);--muted:#8ea0ad;--text:#f3f7f8;--lime:#c9f36b;--orange:#ffb45d;--cyan:#76d9e7;--shadow:0 18px 55px rgba(0,0,0,.36)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+#game{position:fixed;inset:0;background:linear-gradient(#93b6c5,#d2d9d0)}
+#scene{position:absolute;inset:0}
+#scene canvas{display:block;width:100%;height:100%;outline:none}
+.vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,12,17,.38),transparent 18%,transparent 66%,rgba(5,12,17,.52));z-index:2}
+.topbar{position:absolute;z-index:5;left:22px;right:22px;top:18px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.brand,.top-actions,.top-stat{display:flex;align-items:center;gap:12px}
+.brand-mark{width:42px;height:42px;border-radius:14px;background:var(--lime);color:#101913;display:grid;place-items:center;font-size:18px;font-weight:900;box-shadow:0 5px 24px rgba(201,243,107,.24)}
+.brand-copy{line-height:1.1;text-shadow:0 2px 10px #000}
+.brand-copy strong{display:block;letter-spacing:.16em;font-size:12px}
+.brand-copy span{font-size:9px;letter-spacing:.2em;color:#d7e0df}
+.top-stat{background:rgba(7,15,21,.6);border:1px solid var(--line);padding:9px 13px;border-radius:13px;backdrop-filter:blur(14px);gap:9px}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(201,243,107,.12)}
+.top-stat small{display:block;color:#9baeb7;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+.top-stat strong{font-family:"DM Mono",monospace;font-size:13px;font-weight:500}
+.top-actions{pointer-events:auto}
+.icon-btn,.pill-btn{border:1px solid var(--line);color:#ecf5f4;background:rgba(8,17,24,.68);backdrop-filter:blur(14px);border-radius:12px;padding:10px 13px;font-size:10px;font-weight:800;letter-spacing:.1em;transition:.2s}
+.icon-btn:hover,.pill-btn:hover{border-color:rgba(201,243,107,.6);transform:translateY(-1px)}
+.hud-left{position:absolute;z-index:5;left:22px;top:90px;display:flex;flex-direction:column;gap:12px;width:270px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);backdrop-filter:blur(18px);overflow:hidden}
+.panel-head{padding:13px 15px 10px;display:flex;align-items:center;justify-content:space-between}
+.eyebrow{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#9eb1ba;font-weight:800}
+.panel-head strong{font-size:11px;letter-spacing:.08em}
+#map{height:188px;background:#dce4df}
+.map-footer{display:flex;justify-content:space-between;padding:9px 13px;color:#93a8b2;font-size:9px}
+.map-footer b{color:var(--lime);font-family:"DM Mono",monospace;font-weight:500}
+.map-btn{border:0;background:none;color:var(--lime);font-size:9px;font-weight:800;letter-spacing:.1em}
+.gps-panel{padding:13px 15px}
+.gps-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.gps-row span{color:#93a8b2;font-size:10px}
+.gps-row strong{font-family:"DM Mono",monospace;font-size:11px;font-weight:500}
+.route-name{font-size:12px;font-weight:800;margin-top:6px}
+.route-sub{font-size:10px;color:#93a8b2;margin-top:3px}
+.hud-right{position:absolute;z-index:5;right:22px;top:90px;width:260px;display:flex;flex-direction:column;gap:12px}
+.radio{padding:15px}
+.radio-title{display:flex;align-items:center;gap:10px}
+.radio-art{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#293c42,#15232a);display:grid;place-items:center;color:var(--lime);font-size:18px}
+.radio-title strong{font-size:11px;letter-spacing:.12em;display:block}
+.radio-title small{font-size:9px;color:#91a5af}
+.radio-wave{height:25px;display:flex;align-items:center;gap:3px;margin:11px 0}
+.radio-wave i{display:block;width:3px;border-radius:5px;height:6px;background:#6c8390;animation:wave .75s ease-in-out infinite alternate}
+.radio-wave i:nth-child(3n){animation-delay:.2s}.radio-wave i:nth-child(2n){animation-delay:.4s}
+.radio-wave.paused i{animation-play-state:paused;height:3px}
+@keyframes wave{to{height:22px;background:var(--lime)}}
+.radio-controls{display:flex;gap:8px;align-items:center}
+.round-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1a2a33;color:#eaf1ee}
+.round-btn.main{background:var(--lime);color:#101710;border:0;font-size:14px}
+.radio-meta{min-width:0;flex:1}
+.radio-meta strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+.radio-meta small{font-size:9px;color:#91a5af}
+.radio-form{border-top:1px solid var(--line);margin-top:13px;padding-top:12px}
+.field-label{font-size:9px;color:#9eafb7;letter-spacing:.13em;font-weight:800;text-transform:uppercase;display:block;margin-bottom:6px}
+.field{width:100%;padding:10px 11px;border-radius:10px;border:1px solid rgba(213,232,241,.12);background:#0b151c;color:white;font-size:10px;outline:none}
+.field:focus{border-color:rgba(201,243,107,.6)}
+.radio-form .row{display:flex;gap:7px;margin-top:7px}
+.radio-form .row .field{min-width:0}
+.mini-action{border:0;border-radius:9px;background:#c9f36b;color:#172014;font-size:9px;font-weight:900;padding:0 12px;letter-spacing:.08em;white-space:nowrap}
+.radio-note{font-size:9px;line-height:1.5;color:#7e939f;margin-top:8px}
+.vehicle-panel{padding:14px 15px}
+.vehicle-line{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.vehicle-line strong{font-size:13px}
+.vehicle-line span{font-size:9px;color:#a8b7bc}
+.vehicle-specs{display:flex;gap:7px;margin-top:12px}
+.spec{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:9px;padding:7px 9px;flex:1}
+.spec small{display:block;font-size:8px;color:#8ea1aa;letter-spacing:.1em;text-transform:uppercase}
+.spec b{font-family:"DM Mono";font-size:11px;font-weight:500;display:block;margin-top:3px}
+.bottom-hud{position:absolute;z-index:5;bottom:20px;left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;gap:15px;pointer-events:none}
+.speed-card{width:222px;padding:13px 16px;background:rgba(7,15,21,.78);border:1px solid var(--line);border-radius:17px;backdrop-filter:blur(16px);box-shadow:var(--shadow)}
+.speed-label{font-size:9px;color:#92a6b0;letter-spacing:.18em;font-weight:800}
+.speed-main{display:flex;align-items:baseline;gap:9px;margin-top:0}
+#speed{font-family:"DM Mono",monospace;font-size:52px;letter-spacing:-.08em;font-weight:500;line-height:1}
+.speed-unit{font-size:10px;color:#a2b1b8}
+.speed-bottom{display:flex;justify-content:space-between;margin-top:8px;color:#92a6b0;font-size:9px}
+.speed-bottom strong{color:var(--lime);font-family:"DM Mono";font-weight:500}
+.controls-hint{display:flex;align-items:center;gap:7px;padding:10px 13px;background:rgba(7,15,21,.72);border:1px solid var(--line);border-radius:13px;color:#b5c1c5;font-size:9px;backdrop-filter:blur(12px)}
+.key{border:1px solid rgba(225,239,244,.23);border-bottom-width:2px;border-radius:5px;padding:3px 5px;color:white;font:10px "DM Mono";min-width:19px;text-align:center}
+.dash-actions{display:flex;gap:7px;pointer-events:auto}
+.dash-actions button{border:1px solid var(--line);background:rgba(7,15,21,.76);color:white;border-radius:12px;padding:11px 13px;font-size:9px;letter-spacing:.08em;font-weight:800;backdrop-filter:blur(14px)}
+.dash-actions button.active{background:var(--lime);color:#142012;border-color:var(--lime)}
+.status-toast{position:absolute;z-index:20;top:76px;left:50%;transform:translate(-50%,-12px);opacity:0;pointer-events:none;background:#17252c;border:1px solid rgba(201,243,107,.28);border-radius:12px;padding:11px 16px;font-size:11px;box-shadow:var(--shadow);transition:.25s;white-space:nowrap}
+.status-toast.show{opacity:1;transform:translate(-50%,0)}
+#loading{position:absolute;z-index:8;bottom:105px;left:50%;transform:translateX(-50%);background:rgba(8,17,23,.8);border:1px solid var(--line);padding:9px 13px;border-radius:10px;font-size:9px;color:#c5d2d5;letter-spacing:.08em;backdrop-filter:blur(12px)}
+#loading.done{display:none}
+.intro{position:absolute;z-index:30;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 42%,rgba(41,73,75,.3),rgba(5,11,16,.88) 62%),linear-gradient(135deg,rgba(10,20,28,.85),rgba(5,11,16,.94));backdrop-filter:blur(10px);transition:opacity .45s,visibility .45s}
+.intro.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.intro-card{width:min(760px,calc(100% - 34px));max-height:94vh;overflow:auto;background:rgba(14,24,31,.88);border:1px solid rgba(225,240,241,.16);border-radius:27px;padding:30px;box-shadow:0 35px 100px rgba(0,0,0,.55)}
+.intro-top{display:flex;align-items:center;gap:14px}
+.intro-mark{width:52px;height:52px;border-radius:17px;background:var(--lime);color:#132014;display:grid;place-items:center;font-size:22px;font-weight:900}
+.intro-kicker{font-size:9px;color:var(--lime);letter-spacing:.24em;font-weight:900}
+.intro h1{font-size:clamp(32px,6vw,54px);letter-spacing:-.07em;line-height:.95;margin:24px 0 10px}
+.intro h1 span{color:var(--lime)}
+.intro-desc{color:#9badb5;font-size:12px;line-height:1.7;max-width:560px}
+.section-label{display:flex;align-items:center;justify-content:space-between;margin:23px 0 11px;color:#a9b8bd;font-size:9px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+.car-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.car-choice{border:1px solid rgba(225,240,241,.13);border-radius:16px;background:rgba(255,255,255,.035);padding:13px;text-align:left;color:white;transition:.2s;min-width:0}
+.car-choice:hover,.car-choice.selected{border-color:var(--lime);background:rgba(201,243,107,.08);transform:translateY(-2px)}
+.car-emoji{font-size:32px;height:55px;display:grid;place-items:center;filter:drop-shadow(0 7px 8px rgba(0,0,0,.3))}
+.car-choice strong{display:block;font-size:11px;margin-top:5px}
+.car-choice small{display:block;font-size:9px;color:#91a3ad;margin-top:4px;line-height:1.4}
+.intro-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.meta-chip{padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.045);border:1px solid var(--line);font-size:9px;color:#aab9be}
+.start-row{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:22px}
+.start-note{font-size:9px;color:#82959f;line-height:1.5;max-width:320px}
+.start-btn{background:var(--lime);border:0;border-radius:12px;color:#132014;padding:14px 23px;font-weight:900;font-size:10px;letter-spacing:.16em;white-space:nowrap}
+.modal{position:absolute;z-index:25;inset:0;display:none;place-items:center;background:rgba(3,8,12,.58);backdrop-filter:blur(8px)}
+.modal.open{display:grid}
+.modal-card{width:min(510px,calc(100% - 30px));border-radius:20px;background:#111e26;border:1px solid var(--line);padding:20px;box-shadow:var(--shadow)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.modal-head strong{font-size:12px;letter-spacing:.14em}
+.close-btn{border:1px solid var(--line);background:#1c2c35;color:white;border-radius:8px;padding:6px 10px}
+.garage-list{display:grid;gap:8px}
+.garage-item{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:#17262f;color:white;border-radius:12px;padding:12px;text-align:left}
+.garage-item span{font-size:25px}
+.garage-item b{display:block;font-size:11px}
+.garage-item small{display:block;color:#8da1aa;font-size:9px;margin-top:3px}
+.garage-item em{margin-left:auto;color:var(--lime);font-style:normal;font-size:9px}
+.mobile-controls{display:none;position:absolute;z-index:7;bottom:145px;left:15px;right:15px;justify-content:space-between;pointer-events:none}
+.mobile-pad{display:flex;gap:7px;pointer-events:auto}
+.mobile-controls button{width:48px;height:48px;border-radius:14px;border:1px solid rgba(225,240,241,.22);background:rgba(8,17,23,.66);color:white;font-size:18px;touch-action:none;backdrop-filter:blur(10px)}
+.mobile-controls button:active{background:var(--lime);color:#132014}
+#yt-audio{position:fixed;width:1px;height:1px;opacity:.01;pointer-events:none;left:-10px;bottom:-10px;border:0}
+.leaflet-container{font-family:Manrope,sans-serif}
+.leaflet-control-attribution{font-size:8px!important}
+.leaflet-popup-content-wrapper{border-radius:9px}
+@media(max-width:850px){.hud-left{width:220px}.hud-right{width:225px}.top-stat{display:none}.controls-hint{display:none}.vehicle-panel{display:none}#map{height:150px}.radio-form{display:none}}
+@media(max-width:620px){.topbar{left:12px;right:12px;top:12px}.brand-mark{width:35px;height:35px}.brand-copy strong{font-size:10px}.brand-copy span{font-size:8px}.top-actions{gap:5px}.icon-btn,.pill-btn{padding:9px;font-size:8px}.hud-left{left:10px;top:65px;width:155px;gap:7px}.hud-right{right:10px;top:65px;width:160px;gap:7px}.panel{border-radius:13px}.panel-head{padding:9px 10px}.panel-head strong{font-size:9px}#map{height:116px}.map-footer{padding:6px 8px;font-size:7px}.gps-panel{padding:9px}.gps-row span{font-size:8px}.gps-row strong{font-size:8px}.route-name{font-size:9px}.route-sub{font-size:8px}.radio{padding:10px}.radio-art{width:29px;height:29px}.radio-title strong{font-size:9px}.radio-title small{font-size:8px}.radio-wave{height:16px;margin:7px 0}.radio-wave i{width:2px}.radio-controls{gap:4px}.round-btn{width:28px;height:28px}.radio-meta strong{font-size:8px}.radio-meta small{font-size:7px}.bottom-hud{left:10px;right:10px;bottom:10px}.speed-card{width:155px;padding:9px 11px}.speed-label{font-size:7px}#speed{font-size:38px}.speed-unit{font-size:8px}.speed-bottom{font-size:7px}.dash-actions{gap:4px}.dash-actions button{padding:9px 8px;font-size:7px}.mobile-controls{display:flex}.status-toast{top:57px;font-size:9px}.intro-card{padding:21px;border-radius:20px}.car-grid{gap:6px}.car-choice{padding:9px}.car-emoji{font-size:25px;height:40px}.car-choice strong{font-size:9px}.car-choice small{font-size:8px}.intro-desc{font-size:10px}.start-row{align-items:flex-start;flex-direction:column}.start-btn{width:100%}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="scene"></div>
+  <div class="vignette"></div>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">SD</div><div class="brand-copy"><strong>SAMPA DRIVER</strong><span>ROLEPLAY • SÃO PAULO</span></div></div>
+    <div class="top-stat"><i class="pulse"></i><div><small>Simulação ao vivo</small><strong id="city-state">CENTRO • SÃO PAULO</strong></div></div>
+    <div class="top-actions"><button class="pill-btn" id="garage-open">GARAGEM</button><button class="icon-btn" id="quality-btn">QUALIDADE · ALTA</button><button class="icon-btn" id="pause-btn">Ⅱ PAUSAR</button></div>
+  </header>
+  <aside class="hud-left">
+    <section class="panel">
+      <div class="panel-head"><span class="eyebrow">Navegação</span><strong>GPS · SP</strong></div>
+      <div id="map"></div>
+      <div class="map-footer"><span>BASE CARTOGRÁFICA OSM</span><button class="map-btn" id="recenter">CENTRALIZAR ↗</button></div>
+    </section>
+    <section class="panel gps-panel">
+      <span class="eyebrow">Destino / rota</span>
+      <div class="route-name" id="destination-name">Avenida Paulista</div>
+      <div class="route-sub" id="destination-hint">Selecione um destino para navegar</div>
+      <div class="gps-row"><span>Distância</span><strong id="distance">—</strong></div>
+      <div class="gps-row"><span>Coordenadas</span><strong id="coords">-23.56140, -46.65590</strong></div>
+      <select class="field" id="destination-select" style="margin-top:11px">
+        <option value="">Escolher destino...</option>
+        <option value="masp">MASP · Av. Paulista</option>
+        <option value="trianon">Parque Trianon</option>
+        <option value="fiesp">FIESP · Paulista</option>
+        <option value="ciclista">Praça do Ciclista</option>
+        <option value="augusta">Rua Augusta</option>
+        <option value="conjunto">Conjunto Nacional</option>
+        <option value="freire">Rua Oscar Freire</option>
+      </select>
+    </section>
+  </aside>
+  <aside class="hud-right">
+    <section class="panel vehicle-panel">
+      <span class="eyebrow">Veículo atual</span>
+      <div class="vehicle-line"><strong id="vehicle-name">Fusca 1300</strong><span id="vehicle-color">AZUL NOTURNO</span></div>
+      <div class="vehicle-specs"><div class="spec"><small>Motor</small><b id="engine-label">1.3L</b></div><div class="spec"><small>Tração</small><b>TRASEIRA</b></div><div class="spec"><small>Marcha</small><b id="gear-label">N</b></div></div>
+    </section>
+    <section class="panel radio">
+      <div class="radio-title"><div class="radio-art">♫</div><div><strong>RÁDIO DO CARRO</strong><small id="radio-state">Sintonize sua playlist</small></div></div>
+      <div class="radio-wave paused" id="radio-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="radio-controls"><button class="round-btn" id="radio-prev">‹</button><button class="round-btn main" id="radio-play">▶</button><div class="radio-meta"><strong id="track-title">Sem playlist</strong><small id="track-sub">Adicione um link abaixo</small></div><button class="round-btn" id="radio-next">›</button></div>
+      <div class="radio-form">
+        <label class="field-label" for="radio-source">Fonte de áudio</label>
+        <select class="field" id="radio-source"><option value="youtube">YouTube · playlist</option><option value="piped">Piped · playlist</option><option value="direct">Link direto · áudio</option></select>
+        <div class="row"><input class="field" id="playlist-url" placeholder="Cole o link da playlist..." autocomplete="off"><button class="mini-action" id="radio-load">OK</button></div>
+        <div class="radio-note">O YouTube usa o player oficial incorporado; Piped tenta obter o fluxo de áudio. Links diretos MP3/OGG também funcionam.</div>
+      </div>
+    </section>
+  </aside>
+  <div class="bottom-hud">
+    <section class="speed-card"><div class="speed-label">VELOCIDADE ATUAL</div><div class="speed-main"><span id="speed">000</span><span class="speed-unit">KM/H</span></div><div class="speed-bottom"><span id="drive-mode">PARK · N</span><strong id="odometer">000000 KM</strong></div></section>
+    <div class="controls-hint"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span><span>DIRIGIR</span><span class="key">SPACE</span><span>FREIO</span><span class="key">C</span><span>CÂMERA</span></div>
+    <div class="dash-actions"><button id="camera-btn">◉ CÂMERA 3ª</button><button id="headlight-btn">☼ FARÓIS</button><button id="horn-btn">♫ BUZINA</button></div>
+  </div>
+  <div class="mobile-controls">
+    <div class="mobile-pad"><button data-key="a">◀</button><button data-key="d">▶</button></div>
+    <div class="mobile-pad"><button data-key="s">▼</button><button data-key="w">▲</button></div>
+  </div>
+  <div id="loading">CARREGANDO MALHA URBANA DE SÃO PAULO…</div>
+  <div class="status-toast" id="toast"></div>
+  <div class="modal" id="garage-modal"><div class="modal-card"><div class="modal-head"><strong>GARAGEM · SELECIONE SEU CARRO</strong><button class="close-btn" data-close="garage-modal">FECHAR ×</button></div><div class="garage-list" id="garage-list"></div></div></div>
+  <div class="modal" id="pause-modal"><div class="modal-card"><div class="modal-head"><strong>JOGO PAUSADO</strong><button class="close-btn" data-close="pause-modal">FECHAR ×</button></div><p style="font-size:11px;color:#9eb0b9;line-height:1.7">Respire, confira o mapa e escolha seu próximo passeio por São Paulo.</p><button class="start-btn" id="resume-btn" style="width:100%">VOLTAR A DIRIGIR</button></div></div>
+  <div class="intro" id="intro">
+    <div class="intro-card">
+      <div class="intro-top"><div class="intro-mark">SD</div><div><div class="intro-kicker">UM PASSEIO PELA CIDADE</div><div style="font-size:10px;color:#91a5ae;letter-spacing:.14em;margin-top:4px">SIMULADOR DE DIREÇÃO · BRASIL</div></div></div>
+      <h1>SAMPA <span>DRIVER.</span></h1>
+      <p class="intro-desc">Pegue a chave, escolha seu carro e explore São Paulo. Ruas e edifícios são posicionados com dados do OpenStreetMap. Ligue o rádio, siga o GPS e curta o rolê no seu ritmo.</p>
+      <div class="section-label"><span>Escolha seu veículo</span><span>03 MODELOS</span></div>
+      <div class="car-grid">
+        <button class="car-choice selected" data-car="fusca"><div class="car-emoji">🚙</div><strong>Fusca clássico</strong><small>Azul-escuro · motor boxer 1.3</small></button>
+        <button class="car-choice" data-car="uno"><div class="car-emoji">🚗</div><strong>Uno trabalhador</strong><small>Branco · escada no teto</small></button>
+        <button class="car-choice" data-car="jeep"><div class="car-emoji">🚙</div><strong>Jipe aventureiro</strong><small>Verde floresta · 4×4</small></button>
+      </div>
+      <div class="intro-meta"><span class="meta-chip">⌖ Av. Paulista · São Paulo</span><span class="meta-chip">◉ 1ª e 3ª pessoa</span><span class="meta-chip">♫ Rádio personalizado</span><span class="meta-chip">⌁ GPS integrado</span></div>
+      <div class="start-row"><div class="start-note">WASD / setas para dirigir · Espaço para frear · C para trocar a câmera. No celular, use os controles na tela.</div><button class="start-btn" id="start-btn">ENTRAR NA CIDADE ↗</button></div>
+    </div>
+  </div>
+  <iframe id="yt-audio" title="Player de áudio da playlist" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+"use strict";
+const LAT0=-23.5614,LON0=-46.6559,COS=Math.cos(LAT0*Math.PI/180);
+const $=id=>document.getElementById(id);
+const VEHICLES={
+ fusca:{name:"Fusca 1300",color:"AZUL NOTURNO",hex:0x102c50,engine:"1.3L",top:34,accel:7.2,steer:1.12,kind:"fusca"},
+ uno:{name:"Fiat Uno Escada",color:"BRANCO",hex:0xe9e9df,engine:"1.0L",top:39,accel:8.4,steer:1.28,kind:"uno"},
+ jeep:{name:"Jipe 4×4",color:"VERDE FLORESTA",hex:0x315b36,engine:"2.0L",top:42,accel:8.8,steer:.93,kind:"jeep"}
+};
+const DESTINATIONS={
+ masp:{name:"MASP · Avenida Paulista",lat:-23.5614,lon:-46.6559},
+ trianon:{name:"Parque Trianon",lat:-23.5617,lon:-46.6581},
+ fiesp:{name:"FIESP · Avenida Paulista",lat:-23.5612,lon:-46.6554},
+ ciclista:{name:"Praça do Ciclista",lat:-23.5569,lon:-46.6608},
+ augusta:{name:"Rua Augusta",lat:-23.5559,lon:-46.6594},
+ conjunto:{name:"Conjunto Nacional",lat:-23.5574,lon:-46.6601},
+ freire:{name:"Rua Oscar Freire",lat:-23.5655,lon:-46.6691}
+};
+let selectedCar="fusca",carType="fusca",scene,camera,renderer,world,car,carGroup,clock;
+let cityGroup,roadPaths=[],routeLine=null,traffic=[],map,playerMarker,destMarker,routeLayer;
+let player={x:0,z:0,yaw:0,speed:0},keys={},started=false,paused=false,firstPerson=false,headlights=false,quality=1,lastMapUpdate=0,odometer=0;
+let audioCtx,engineOsc,engineGain,engineFilter,hornOsc,hornGain;
+let radioAudio=new Audio(),radioQueue=[],radioIndex=0,radioPlaying=false,ytMode=false;
+let dayClock=14*60+30,worldReady=false;
+function toast(text){const el=$("toast");el.textContent=text;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600)}
+function latLonToWorld(lat,lon){return {x:(lon-LON0)*111320*COS,z:-(lat-LAT0)*111320}}
+function worldToLatLon(x,z){return {lat:LAT0-z/111320,lon:LON0+x/(111320*COS)}}
+function rand(a,b){return a+Math.random()*(b-a)}
+function initThree(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb9c3);scene.fog=new THREE.Fog(0x9eb9c3,190,1050);
+ camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,1800);
+ renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+ renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
+ $("scene").appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xddeeff,0x505b4c,1.8));
+ const sun=new THREE.DirectionalLight(0xffedcf,2.05);sun.position.set(-120,190,85);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-170;sun.shadow.camera.right=170;sun.shadow.camera.top=170;sun.shadow.camera.bottom=-170;scene.add(sun);scene.userData.sun=sun;
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(3000,3000),new THREE.MeshStandardMaterial({color:0x687468,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
+ cityGroup=new THREE.Group();scene.add(cityGroup);
+ makeFallbackCity();
+ createVehicle(selectedCar);
+ window.addEventListener("resize",onResize);
+ animate();
+}
+function onResize(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function makeFallbackCity(){
+ cityGroup.clear();roadPaths=[];
+ const asphalt=new THREE.MeshStandardMaterial({color:0x30383d,roughness:.95}),side=new THREE.MeshStandardMaterial({color:0x9c9e96,roughness:1});
+ for(let i=-7;i<=7;i++){
+  const v=i*86;
+  const roadA=new THREE.Mesh(new THREE.PlaneGeometry(13,1350),asphalt);roadA.rotation.x=-Math.PI/2;roadA.position.set(v,.015,0);cityGroup.add(roadA);
+  const roadB=new THREE.Mesh(new THREE.PlaneGeometry(1350,13),asphalt);roadB.rotation.x=-Math.PI/2;roadB.position.set(0,.016,v);cityGroup.add(roadB);
+  roadPaths.push([{x:v,z:-675},{x:v,z:675}]);roadPaths.push([{x:-675,z:v},{x:675,z:v}]);
+ }
+ const mats=[0xaaa99c,0x858d91,0xb9b5a8,0x66777b,0xc2bda9,0x737c79].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.9}));
+ for(let x=-6;x<=6;x++)for(let z=-6;z<=6;z++){
+  if(Math.abs(x)<1&&Math.abs(z)<1)continue;
+  const bx=x*86+43+rand(-12,12),bz=z*86+43+rand(-12,12),w=rand(25,57),d=rand(24,56),h=rand(12,75);
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats[Math.floor(rand(0,mats.length))]);b.position.set(bx,h/2,bz);b.castShadow=true;b.receiveShadow=true;cityGroup.add(b);
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(w*.18,rand(1,3),d*.18),mats[0]);roof.position.set(bx,h+1,bz);cityGroup.add(roof);
+ }
+ const plaza=new THREE.Mesh(new THREE.PlaneGeometry(50,50),side);plaza.rotation.x=-Math.PI/2;plaza.position.set(0,.035,0);cityGroup.add(plaza);
+ makeTraffic();
+}
+function addRoadSegment(arr,a,b,width){
+ const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<.5)return;
+ const nx=-dz/len*width/2,nz=dx/len*width/2;
+ arr.push(a.x+nx,.035,a.z+nz,a.x-nx,.035,a.z-nz,b.x+nx,.035,b.z+nz);
+ arr.push(a.x-nx,.035,a.z-nz,b.x-nx,.035,b.z-nz,b.x+nx,.035,b.z+nz);
+}
+function createOSMGeometry(elements){
+ cityGroup.clear();roadPaths=[];
+ const vertices=[],roadMat=new THREE.MeshStandardMaterial({color:0x343a3d,roughness:.96});
+ const roadColors={primary:10,secondary:9,tertiary:8,residential:6.6,unclassified:6,service:4.7,living_street:5};
+ const buildingSets=[[],[],[],[]],materials=[0x858d8e,0xa9a79b,0x697b7d,0xc1b9a8].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.88}));
+ let bcount=0;
+ for(const el of elements){
+  if(!el.geometry||el.geometry.length<2)continue;
+  const pts=el.geometry.map(p=>latLonToWorld(p.lat,p.lon));
+  if(el.tags&&el.tags.highway){
+   const width=roadColors[el.tags.highway]||5.6;
+   roadPaths.push(pts);
+   for(let i=0;i<pts.length-1;i++)addRoadSegment(vertices,pts[i],pts[i+1],width);
+  }else if(el.tags&&el.tags.building&&bcount<1400&&pts.length>=4){
+   let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+   pts.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z)});
+   const w=maxX-minX,d=maxZ-minZ;if(w<3||d<3||w>100||d>100)continue;
+   const tags=el.tags;let h=parseFloat(tags.height)||((parseInt(tags["building:levels"],10)||Math.round(rand(2,8)))*3.15);h=Math.max(5,Math.min(105,h));
+   const bucket=Math.floor(rand(0,4));buildingSets[bucket].push({x:(minX+maxX)/2,z:(minZ+maxZ)/2,w:w*.92,d:d*.92,h});
+   bcount++;
+  }
+ }
+ const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();
+ const roads=new THREE.Mesh(geo,roadMat);roads.receiveShadow=true;cityGroup.add(roads);
+ const boxGeo=new THREE.BoxGeometry(1,1,1);
+ buildingSets.forEach((items,index)=>{
+  if(!items.length)return;
+  const inst=new THREE.InstancedMesh(boxGeo,materials[index],items.length);inst.castShadow=true;inst.receiveShadow=true;
+  const dummy=new THREE.Object3D();
+  items.forEach((b,i)=>{dummy.position.set(b.x,b.h/2,b.z);dummy.scale.set(b.w,b.h,b.d);dummy.rotation.y=rand(-.025,.025);dummy.updateMatrix();inst.setMatrixAt(i,dummy.matrix)});
+  inst.instanceMatrix.needsUpdate=true;cityGroup.add(inst);
+ });
+ makeTraffic();
+ return {roads:roadPaths.length,buildings:bcount};
+}
+async function loadOSM(){
+ const loading=$("loading");
+ const query='[out:json][timeout:22];(way["highway"~"^(primary|secondary|tertiary|residential|unclassified|service|living_street)$"](around:1350,-23.5614,-46.6559);way["building"](around:1050,-23.5614,-46.6559););out geom;';
+ const endpoints=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+ for(const endpoint of endpoints){
+  try{
+   loading.textContent="BAIXANDO RUAS E EDIFÍCIOS DO OPENSTREETMAP…";
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),26000);
+   const response=await fetch(endpoint+"?data="+encodeURIComponent(query),{signal:controller.signal});clearTimeout(timer);
+   if(!response.ok)throw new Error("HTTP "+response.status);
+   const data=await response.json();const stats=createOSMGeometry(data.elements||[]);
+   if(stats.roads<3)throw new Error("Dados insuficientes");
+   const snap=nearestRoadPoint({x:0,z:0});if(snap){player.x=snap.x;player.z=snap.z}
+   player.yaw=0;car.position.set(player.x,0,player.z);
+   loading.textContent="SÃO PAULO CARREGADA · "+stats.roads+" VIAS · "+stats.buildings+" EDIFÍCIOS";
+   setTimeout(()=>loading.classList.add("done"),2300);
+   worldReady=true;toast("Mapa real do OpenStreetMap carregado");return;
+  }catch(e){console.warn("OSM:",e.message)}
+ }
+ loading.textContent="MODO LOCAL · MAPA ALTERNATIVO ATIVO";
+ setTimeout(()=>loading.classList.add("done"),2600);worldReady=true;
+ toast("Mapa online indisponível — cenário local ativado");
+}
+function nearestRoadPoint(point){
+ let best=null,dist=Infinity;
+ for(const path of roadPaths)for(let i=0;i<path.length-1;i++){
+  const a=path[i],b=path[i+1],dx=b.x-a.x,dz=b.z-a.z;
+  const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.z-a.z)*dz)/(dx*dx+dz*dz||1)));
+  const p={x:a.x+t*dx,z:a.z+t*dz},d=Math.hypot(p.x-point.x,p.z-point.z);
+  if(d<dist){dist=d;best=p}
+ }
+ return best&&dist<300?best:null;
+}
+function makeVehiclePart(parent,geo,mat,pos,scale,rotation){
+ const m=new THREE.Mesh(geo,mat);m.position.set(pos[0],pos[1],pos[2]);if(scale)m.scale.set(scale[0],scale[1],scale[2]);if(rotation)m.rotation.set(rotation[0],rotation[1],rotation[2]);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function createVehicle(type){
+ if(carGroup)scene.remove(carGroup);
+ carType=type;const data=VEHICLES[type];carGroup=new THREE.Group();car=new THREE.Group();carGroup.add(car);
+ const paint=new THREE.MeshStandardMaterial({color:data.hex,metalness:.28,roughness:.38});
+ const dark=new THREE.MeshStandardMaterial({color:0x10171a,roughness:.75});
+ const glass=new THREE.MeshStandardMaterial({color:0x34515b,metalness:.16,roughness:.2,transparent:true,opacity:.72});
+ const chrome=new THREE.MeshStandardMaterial({color:0xb8c4c2,metalness:.8,roughness:.22});
+ const lamp=new THREE.MeshStandardMaterial({color:0xfff1c8,emissive:0xb49a54,emissiveIntensity:.45});
+ const wheelGeo=new THREE.CylinderGeometry(.39,.39,.24,18);
+ const wheels=[];
+ if(type==="fusca"){
+  makeVehiclePart(car,new THREE.SphereGeometry(1,24,18),paint,[0,1.02,0],[1.18,.55,1.86]);
+  makeVehiclePart(car,new THREE.SphereGeometry(1,24,18),paint,[0,1.55,-.12],[.91,.56,1.05]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.68,.13,3.05),chrome,[0,.72,0],[1,1,1]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.3,.08,.12),chrome,[0,.74,-1.78]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.3,.08,.12),chrome,[0,.74,1.78]);
+  makeVehiclePart(car,new THREE.SphereGeometry(.18,12,10),lamp,[-.77,1.15,-1.7],[1,1,.45]);
+  makeVehiclePart(car,new THREE.SphereGeometry(.18,12,10),lamp,[.77,1.15,-1.7],[1,1,.45]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.23,.48,.025),glass,[0,1.59,-1.04]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.23,.42,.025),glass,[0,1.57,.94]);
+  makeVehiclePart(car,new THREE.BoxGeometry(.055,.5,.05),chrome,[0,1.55,-1.04]);
+ }else if(type==="uno"){
+  makeVehiclePart(car,new THREE.BoxGeometry(1.88,.67,3.35),paint,[0,1.02,0]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.72,.92,1.72),paint,[0,1.72,-.36]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.66,.72,.03),glass,[0,1.75,-1.23]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.66,.68,.03),glass,[0,1.72,.51]);
+  makeVehiclePart(car,new THREE.BoxGeometry(.04,.68,.035),chrome,[0,1.72,-1.25]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.6,.06,1.8),dark,[0,2.22,-.35]);
+  for(let x of [-.53,.53]){makeVehiclePart(car,new THREE.BoxGeometry(.055,.06,2.45),chrome,[x,2.34,-.35]);makeVehiclePart(car,new THREE.BoxGeometry(.055,.06,.65),chrome,[x,2.34,-1.2]);makeVehiclePart(car,new THREE.BoxGeometry(.055,.06,.65),chrome,[x,2.34,.5])}
+  makeVehiclePart(car,new THREE.BoxGeometry(1.82,.1,.12),chrome,[0,1.05,-1.72]);
+  for(let x of [-.72,.72])makeVehiclePart(car,new THREE.BoxGeometry(.25,.16,.12),lamp,[x,1.12,-1.72]);
+ }else{
+  makeVehiclePart(car,new THREE.BoxGeometry(2.02,.88,3.5),paint,[0,1.18,0]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.78,1.03,1.95),paint,[0,2.02,-.25]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.72,.75,.04),glass,[0,2.05,-1.25]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.7,.72,.04),glass,[0,2.02,.75]);
+  for(let x of [-.86,.86])makeVehiclePart(car,new THREE.BoxGeometry(.08,1.35,.08),dark,[x,1.95,.12]);
+  makeVehiclePart(car,new THREE.TorusGeometry(.42,.12,10,18),dark,[0,1.65,1.82],[1,1,1],[Math.PI/2,0,0]);
+  makeVehiclePart(car,new THREE.CylinderGeometry(.28,.28,.18,18),dark,[0,1.65,1.85],[1,1,1],[Math.PI/2,0,0]);
+  makeVehiclePart(car,new THREE.BoxGeometry(1.9,.13,.12),chrome,[0,.82,-1.78]);
+  makeVehiclePart(car,new THREE.BoxGeometry(.34,.18,.12),lamp,[-.7,1.3,-1.78]);
+  makeVehiclePart(car,new THREE.BoxGeometry(.34,.18,.12),lamp,[.7,1.3,-1.78]);
+ }
+ for(const x of [-.91,.91])for(const z of [-1.15,1.15]){
+  const w=new THREE.Mesh(wheelGeo,dark);w.rotation.z=Math.PI/2;w.position.set(x,.55,z);w.castShadow=true;car.add(w);wheels.push(w);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.25,14),chrome);hub.rotation.z=Math.PI/2;hub.position.set(x*1.01,.55,z);car.add(hub);
+ }
+ car.userData.wheels=wheels;
+ const headL=new THREE.SpotLight(0xfff2d7,0,65,.38,.45,1);headL.position.set(-.62,1.25,-1.55);headL.target.position.set(-.62,.5,-20);car.add(headL,headL.target);
+ const headR=new THREE.SpotLight(0xfff2d7,0,65,.38,.45,1);headR.position.set(.62,1.25,-1.55);headR.target.position.set(.62,.5,-20);car.add(headR,headR.target);
+ car.userData.lights=[headL,headR];
+ carGroup.position.set(player.x,0,player.z);scene.add(carGroup);
+ $("vehicle-name").textContent=data.name;$("vehicle-color").textContent=data.color;$("engine-label").textContent=data.engine;
+ $("drive-mode").textContent="PARK · N";
+ updateGarage();
+}
+function updateGarage(){
+ const list=$("garage-list");list.innerHTML="";
+ Object.keys(VEHICLES).forEach(k=>{const v=VEHICLES[k],icons={fusca:"🚙",uno:"🚗",jeep:"🚙"};const b=document.createElement("button");b.className="garage-item";b.innerHTML="<span>"+icons[k]+"</span><div><b>"+v.name+"</b><small>"+v.color+" · "+v.engine+"</small></div><em>"+(carType===k?"EM USO":"SELECIONAR")+"</em>";b.addEventListener("click",()=>{createVehicle(k);$("garage-modal").classList.remove("open");toast(v.name+" pronto para rodar")});list.appendChild(b)});
+}
+function makeTraffic(){
+ traffic.forEach(t=>scene.remove(t.mesh));traffic=[];
+ const pathList=roadPaths.filter(p=>p.length>2&&p.length<120);
+ if(!pathList.length)return;
+ for(let i=0;i<Math.min(12,pathList.length);i++){
+  const path=pathList[(i*7)%pathList.length];if(path.length<2)continue;
+  const mat=new THREE.MeshStandardMaterial({color:[0x9d3f32,0xe6e4dc,0x34485a,0x9a9b85,0x22272a,0xb89b63][i%6],roughness:.55});
+  const g=new THREE.Group();const body=new THREE.Mesh(new THREE.BoxGeometry(1.6,.7,3),mat);body.position.y=.75;g.add(body);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(1.35,.55,1.45),new THREE.MeshStandardMaterial({color:0x263b43,roughness:.25}));top.position.set(0,1.34,-.12);g.add(top);
+  const p=path[Math.floor(rand(0,path.length-1))];g.position.set(p.x,0,p.z);scene.add(g);
+  traffic.push({mesh:g,path,index:Math.floor(rand(0,path.length-2)),t:Math.random(),speed:rand(2,5)});
+ }
+}
+function initMap(){
+ if(!window.L)return;
+ map=L.map("map",{zoomControl:false,attributionControl:true,scrollWheelZoom:false}).setView([LAT0,LON0],15);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'}).addTo(map);
+ playerMarker=L.circleMarker([LAT0,LON0],{radius:7,color:"#14221b",weight:3,fillColor:"#c9f36b",fillOpacity:1}).addTo(map);
+ playerMarker.bindTooltip("Seu veículo");
+}
+function updateMap(){
+ if(!map||!playerMarker)return;
+ const ll=worldToLatLon(player.x,player.z);
+ playerMarker.setLatLng([ll.lat,ll.lon]);
+ $("coords").textContent=ll.lat.toFixed(5)+", "+ll.lon.toFixed(5);
+ if(Date.now()-lastMapUpdate>2200){lastMapUpdate=Date.now()}
+}
+async function setDestination(key){
+ if(!key||!DESTINATIONS[key])return;
+ const dest=DESTINATIONS[key];$("destination-name").textContent=dest.name;$("destination-hint").textContent="Calculando rota pelas ruas…";
+ if(destMarker)map&&map.removeLayer(destMarker);
+ if(map)destMarker=L.marker([dest.lat,dest.lon]).addTo(map).bindTooltip(dest.name);
+ if(routeLayer&&map)map.removeLayer(routeLayer);
+ if(routeLine){scene.remove(routeLine);routeLine=null}
+ const current=worldToLatLon(player.x,player.z);let coords=[[current.lon,current.lat],[dest.lon,dest.lat]],distance=null;
+ try{
+  const u="https://router.project-osrm.org/route/v1/driving/"+current.lon+","+current.lat+";"+dest.lon+","+dest.lat+"?overview=full&geometries=geojson";
+  const r=await fetch(u);const d=await r.json();
+  if(d.routes&&d.routes[0]){coords=d.routes[0].geometry.coordinates;distance=d.routes[0].distance}
+ }catch(e){console.warn("GPS route:",e)}
+ if(!distance){distance=Math.hypot((dest.lon-current.lon)*111320*COS,(dest.lat-current.lat)*111320)}
+ $("distance").textContent=distance>1000?(distance/1000).toFixed(1)+" km":Math.round(distance)+" m";
+ $("destination-hint").textContent="Rota ativa · "+(distance/1000).toFixed(1)+" km";
+ if(map){routeLayer=L.polyline(coords.map(c=>[c[1],c[0]]),{color:"#76c9d4",weight:4,opacity:.9,dashArray:"8 7"}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[15,15],maxZoom:16})}
+ const pts=coords.map(c=>{const p=latLonToWorld(c[1],c[0]);return new THREE.Vector3(p.x,.36,p.z)});
+ if(pts.length>1){const g=new THREE.BufferGeometry().setFromPoints(pts);routeLine=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x74e0df,transparent:true,opacity:.8}));scene.add(routeLine)}
+ toast("GPS definido: "+dest.name);
+}
+function startAudio(){
+ if(audioCtx)return;
+ try{
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  engineOsc=audioCtx.createOscillator();engineOsc.type="sawtooth";
+  engineFilter=audioCtx.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=420;
+  engineGain=audioCtx.createGain();engineGain.gain.value=.0001;
+  engineOsc.connect(engineFilter);engineFilter.connect(engineGain);engineGain.connect(audioCtx.destination);engineOsc.start();
+ }catch(e){console.warn("Audio engine:",e)}
+}
+function updateEngine(){
+ if(!audioCtx||!engineOsc)return;
+ const rpm=Math.abs(player.speed);
+ engineOsc.frequency.setTargetAtTime(42+rpm*3.4+(keys.w?35:0),audioCtx.currentTime,.08);
+ engineFilter.frequency.setTargetAtTime(220+rpm*31,audioCtx.currentTime,.1);
+ engineGain.gain.setTargetAtTime(.018+Math.min(rpm/45,.045),audioCtx.currentTime,.12);
+}
+function honk(){
+ if(!audioCtx)return;
+ const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type="square";osc.frequency.value=390;gain.gain.value=.055;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();gain.gain.setTargetAtTime(.0001,audioCtx.currentTime+.18,.08);osc.stop(audioCtx.currentTime+.55);
+}
+function toggleLights(){
+ headlights=!headlights;if(car&&car.userData.lights)car.userData.lights.forEach(l=>l.intensity=headlights?2.3:0);
+ $("headlight-btn").classList.toggle("active",headlights);toast(headlights?"Faróis ligados":"Faróis desligados");
+}
+function setCamera(){
+ firstPerson=!firstPerson;$("camera-btn").textContent=firstPerson?"◉ CÂMERA 1ª":"◉ CÂMERA 3ª";toast(firstPerson?"Câmera em primeira pessoa":"Câmera em terceira pessoa");
+}
+function applyQuality(){
+ quality=quality===1?.72:quality===.72?.45:1;renderer.setPixelRatio(Math.min(devicePixelRatio,1.5)*quality);renderer.setSize(innerWidth,innerHeight);
+ $("quality-btn").textContent="QUALIDADE · "+(quality===1?"ALTA":quality===.72?"MÉDIA":"BAIXA");toast("Qualidade gráfica: "+(quality===1?"alta":quality===.72?"média":"baixa"));
+}
+function updateDay(dt){
+ dayClock=(dayClock+dt*.18)%1440;
+ const hour=Math.floor(dayClock/60),minute=Math.floor(dayClock%60);
+ const sky=hour<6||hour>19?0x142333:hour<8||hour>17?0x8a9caa:0xa4c1c8;
+ scene.background.setHex(sky);scene.fog.color.setHex(sky);
+ const night=hour<6||hour>19,light=scene.userData.sun;light.intensity=night?.25:hour<8||hour>17?1.1:2.05;
+ $("city-state").textContent=(hour<6||hour>19?"NOITE":hour<11?"MANHÃ":hour<17?"TARDE":"FIM DE TARDE")+" · SÃO PAULO";
+}
+function animate(){
+ requestAnimationFrame(animate);if(!renderer||!scene)return;
+ const dt=Math.min(clock?clock.getDelta():.016,.05);
+ if(started&&!paused)updateDriving(dt);
+ updateDay(dt);
+ if(carGroup){
+  carGroup.position.set(player.x,0,player.z);car.rotation.y=player.yaw;
+  const wheels=car.userData.wheels||[];wheels.forEach(w=>w.rotation.x-=player.speed*dt*1.7);
+  if(firstPerson){const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));camera.position.set(player.x+forward.x*.23,player.z?2.0:2.0,player.z+forward.z*.23);camera.position.y=2.0;camera.rotation.set(0,player.yaw,0)}
+  else{
+   const offset=new THREE.Vector3(Math.sin(player.yaw)*10,5.1,Math.cos(player.yaw)*10);
+   const desired=new THREE.Vector3(player.x+offset.x,player.z+offset.z,player.z);
+   camera.position.lerp(new THREE.Vector3(player.x+offset.x,5.0,player.z+offset.z),.12);
+   camera.lookAt(player.x,1.2,player.z);
+  }
+ }
+ renderer.render(scene,camera);
+}
+function updateDriving(dt){
+ const v=VEHICLES[carType],throttle=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),steer=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),brake=keys[" "]||keys.space;
+ if(throttle)player.speed+=throttle*v.accel*dt;
+ else player.speed*=Math.pow(.985,dt*60);
+ if(brake)player.speed*=Math.pow(.86,dt*60);
+ player.speed=Math.max(-9,Math.min(v.top,player.speed));
+ if(Math.abs(player.speed)<.06&&!throttle)player.speed=0;
+ const turnFactor=.32+Math.min(Math.abs(player.speed)/15,1.7);
+ player.yaw-=steer*turnFactor*v.steer*dt*Math.sign(player.speed||1);
+ player.x-=Math.sin(player.yaw)*player.speed*dt;player.z-=Math.cos(player.yaw)*player.speed*dt;
+ odometer+=Math.abs(player.speed*dt)/1000;
+ const kmh=Math.round(Math.abs(player.speed)*3.6);
+ $("speed").textContent=String(kmh).padStart(3,"0");$("odometer").textContent=String(Math.floor(odometer)).padStart(6,"0")+" KM";
+ $("gear-label").textContent=player.speed>1?"D":player.speed< -1?"R":"N";
+ $("drive-mode").textContent=brake?"FREANDO · "+(player.speed<0?"R":"D"):player.speed<-.5?"RÉ · R":player.speed>.5?"DRIVE · D":"PARADO · N";
+ updateEngine();
+ if(Date.now()-lastMapUpdate>1300)updateMap();
+ traffic.forEach(t=>{
+  const p=t.path;t.t+=dt*t.speed/Math.max(20,p.length*8);
+  if(t.t>=1){t.t=0;t.index=(t.index+1)%(p.length-1)}
+  const a=p[t.index],b=p[t.index+1],q=t.t;
+  t.mesh.position.set(a.x+(b.x-a.x)*q,0,a.z+(b.z-a.z)*q);t.mesh.rotation.y=Math.atan2(-(b.x-a.x),-(b.z-a.z));
+ });
+}
+function keyName(e){return e.key.toLowerCase()===" "?"space":e.key.toLowerCase()}
+window.addEventListener("keydown",e=>{
+ const k=keyName(e);if(["arrowup","arrowdown","arrowleft","arrowright","space"].includes(k))e.preventDefault();
+ keys[k]=true;
+ if(k==="c"&&!e.repeat&&started)setCamera();
+ if(k==="h"&&!e.repeat)honk();
+ if(k==="l"&&!e.repeat)toggleLights();
+ if(k==="escape"&&started)togglePause();
+ if(k==="m"&&!e.repeat)$("garage-modal").classList.toggle("open");
+});
+window.addEventListener("keyup",e=>{keys[keyName(e)]=false});
+document.querySelectorAll(".mobile-controls button").forEach(btn=>{
+ const k=btn.dataset.key;
+ btn.addEventListener("pointerdown",e=>{e.preventDefault();keys[k]=true;btn.setPointerCapture(e.pointerId)});
+ ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>btn.addEventListener(ev,()=>keys[k]=false));
+});
+function togglePause(){paused=!paused;$("pause-modal").classList.toggle("open",paused);$("pause-btn").textContent=paused?"▶ CONTINUAR":"Ⅱ PAUSAR"}
+function initRadio(){
+ radioAudio.preload="none";
+ radioAudio.addEventListener("ended",()=>{if(radioQueue.length)nextTrack()});
+ radioAudio.addEventListener("error",()=>{$("radio-state").textContent="Falha ao abrir o áudio";toast("Não foi possível reproduzir este fluxo")});
+}
+function parsePlaylistId(url){
+ try{const u=new URL(url);return u.searchParams.get("list")||u.pathname.split("/").filter(Boolean).pop()}catch(e){return url.trim()}
+}
+function extractVideoId(url){
+ try{const u=new URL(url);return u.searchParams.get("v")||u.pathname.split("/").pop()}catch(e){return url.split("v=")[1]?.split("&")[0]||url}
+}
+function stopRadio(){
+ radioAudio.pause();radioAudio.removeAttribute("src");radioAudio.load();$("yt-audio").src="";ytMode=false;radioPlaying=false;$("radio-play").textContent="▶";$("radio-wave").classList.add("paused");
+}
+async function loadRadio(){
+ const url=$("playlist-url").value.trim(),source=$("radio-source").value;if(!url){toast("Cole um link de playlist primeiro");return}
+ stopRadio();radioQueue=[];radioIndex=0;$("radio-state").textContent="Conectando…";$("track-title").textContent="Carregando playlist";$("track-sub").textContent=source.toUpperCase();
+ if(source==="youtube"){
+  const id=parsePlaylistId(url);
+  if(!id){toast("Link do YouTube inválido");return}
+  ytMode=true;$("yt-audio").src="https://www.youtube-nocookie.com/embed/videoseries?list="+encodeURIComponent(id)+"&autoplay=1&controls=0&rel=0";
+  $("radio-state").textContent="Player oficial · áudio";$("track-title").textContent="Playlist do YouTube";$("track-sub").textContent="Reprodução incorporada";radioPlaying=true;$("radio-play").textContent="Ⅱ";$("radio-wave").classList.remove("paused");toast("Playlist do YouTube conectada");return;
+ }
+ if(source==="direct"){
+  radioQueue=[{url:url,title:url.split("/").pop()||"Áudio direto"}];await playRadioTrack(0);return;
+ }
+ try{
+  const id=parsePlaylistId(url);
+  const instance="https://pipedapi.kavin.rocks";
+  const r=await fetch(instance+"/playlists/"+encodeURIComponent(id));if(!r.ok)throw new Error("Piped HTTP "+r.status);
+  const data=await r.json();
+  const items=data.relatedStreams||data.relatedStreams||data.items||[];
+  radioQueue=items.slice(0,40).map(v=>({id:extractVideoId(v.url||v.link||""),title:v.title||"Faixa Piped"})).filter(v=>v.id);
+  if(!radioQueue.length)throw new Error("Playlist sem faixas");
+  $("radio-state").textContent=radioQueue.length+" faixas encontradas";await playRadioTrack(0);
+ }catch(e){console.warn(e);$("radio-state").textContent="Piped indisponível";$("track-title").textContent="Não foi possível carregar";$("track-sub").textContent="Tente outro link ou instância";toast("Piped não respondeu — tente um link direto ou YouTube")}
+}
+async function playRadioTrack(index){
+ if(index<0||index>=radioQueue.length)return;
+ radioIndex=index;const item=radioQueue[index];
+ if(item.url){radioAudio.src=item.url;$("track-title").textContent=item.title;$("track-sub").textContent="Áudio direto";try{await radioAudio.play();radioPlaying=true}catch(e){toast("Clique em play para iniciar o áudio")}}
+ else{
+  try{
+   const r=await fetch("https://pipedapi.kavin.rocks/streams/"+encodeURIComponent(item.id));if(!r.ok)throw new Error("Stream indisponível");
+   const data=await r.json(),streams=(data.audioStreams||[]).filter(s=>s.url);
+   streams.sort((a,b)=>(b.bitrate||0)-(a.bitrate||0));if(!streams.length)throw new Error("Sem fluxo de áudio");
+   radioAudio.src=streams[0].url;$("track-title").textContent=item.title;$("track-sub").textContent="Piped · faixa "+(index+1)+" / "+radioQueue.length;
+   await radioAudio.play();radioPlaying=true;
+  }catch(e){$("radio-state").textContent="Falha na faixa";toast("Falha ao abrir áudio Piped");return}
+ }
+ $("radio-play").textContent="Ⅱ";$("radio-wave").classList.remove("paused");$("radio-state").textContent="Tocando agora";
+}
+function nextTrack(){if(ytMode){toast("Use os controles do player para avançar");return}if(radioQueue.length)playRadioTrack((radioIndex+1)%radioQueue.length)}
+function prevTrack(){if(ytMode){toast("Use os controles do player para voltar");return}if(radioQueue.length)playRadioTrack((radioIndex-1+radioQueue.length)%radioQueue.length)}
+function toggleRadio(){
+ if(ytMode){if(radioPlaying){$("yt-audio").src="";radioPlaying=false;$("radio-play").textContent="▶";$("radio-wave").classList.add("paused")}else{toast("Recarregue o link para retomar a playlist");return}}
+ else if(radioPlaying){radioAudio.pause();radioPlaying=false;$("radio-play").textContent="▶";$("radio-wave").classList.add("paused")}
+ else if(radioQueue.length){radioAudio.play().then(()=>{radioPlaying=true;$("radio-play").textContent="Ⅱ";$("radio-wave").classList.remove("paused")}).catch(()=>toast("O navegador bloqueou a reprodução"))}
+ else{loadRadio()}
+}
+$("start-btn").addEventListener("click",()=>{
+ selectedCar=document.querySelector(".car-choice.selected")?.dataset.car||"fusca";createVehicle(selectedCar);started=true;paused=false;$("intro").classList.add("hidden");startAudio();if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();if(map)setTimeout(()=>map.invalidateSize(),450);toast("Bem-vindo a São Paulo. Bom passeio!");if(clock)clock.start();
+});
+document.querySelectorAll(".car-choice").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".car-choice").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");selectedCar=b.dataset.car}));
+$("camera-btn").addEventListener("click",setCamera);$("headlight-btn").addEventListener("click",toggleLights);$("horn-btn").addEventListener("click",honk);
+$("quality-btn").addEventListener("click",applyQuality);$("pause-btn").addEventListener("click",togglePause);$("resume-btn").addEventListener("click",togglePause);
+$("garage-open").addEventListener("click",()=>$("garage-modal").classList.add("open"));
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>$(b.dataset.close).classList.remove("open")));
+$("destination-select").addEventListener("change",e=>setDestination(e.target.value));
+$("recenter").addEventListener("click",()=>{if(map){const ll=worldToLatLon(player.x,player.z);map.setView([ll.lat,ll.lon],16)}});
+$("radio-load").addEventListener("click",loadRadio);$("radio-play").addEventListener("click",toggleRadio);$("radio-next").addEventListener("click",nextTrack);$("radio-prev").addEventListener("click",prevTrack);
+$("playlist-url").addEventListener("keydown",e=>{if(e.key==="Enter")loadRadio()});
+$("radio-source").addEventListener("change",e=>{$("playlist-url").placeholder=e.target.value==="direct"?"Cole o link direto do áudio...":"Cole o link da playlist..."});
+$("pause-modal").addEventListener("click",e=>{if(e.target===$("pause-modal"))togglePause()});
+function boot(){
+ clock=new THREE.Clock();initThree();initMap();initRadio();updateGarage();
+ loadOSM();
+}
+boot();
+})();
+</script>
+</body>
+</html>
