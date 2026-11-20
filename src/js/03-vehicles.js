@@ -14,7 +14,7 @@ function extrudeProfile(points, width, bevel) {
   geo.rotateY(-Math.PI / 2);
   geo.computeBoundingBox();
   const bb = geo.boundingBox;
-  geo.translate(0, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
+  geo.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   geo.computeVertexNormals();
   return geo;
 }
@@ -129,13 +129,13 @@ function buildFusca() {
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
-  const paint = PHYS(spec.color, { roughness: 0.3, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.09 });
+  const paint = PHYS(spec.color, { roughness: 0.42, metalness: 0.4, clearcoat: 0.75, clearcoatRoughness: 0.16 });
   const paintDark = PHYS(mixHex(spec.color, 0x000000, 0.25), { roughness: 0.35, metalness: 0.5 });
   const chrome = new THREE.MeshPhysicalMaterial({ color: 0xd6dcda, roughness: 0.16, metalness: 1, clearcoat: 1 });
   const dark = MAT(0x14191b, { roughness: 0.75 });
   const rubber = MAT(0x14181a, { roughness: 0.98 });
-  const glass = new THREE.MeshPhysicalMaterial({ color: 0xa9cbd6, roughness: 0.06, metalness: 0.1, transmission: 0, transparent: true, opacity: 0.34, clearcoat: 1 });
-  const glassDark = glass.clone(); glassDark.opacity = 0.24; glassDark.color.setHex(0x7fa2ad);
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x8fb6c4, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.55, clearcoat: 1 });
+  const glassDark = glass.clone(); glassDark.opacity = 0.45; glassDark.color.setHex(0x6d94a2);
   const headMat = basicMat(0xfff4d6, 0xffe9b8, 0.25);
   const tailMat = basicMat(0x8c1f1a, 0xd0231b, 0.15);
   const amberMat = basicMat(0x8a4a12, 0xff8a1f, 0.15);
@@ -148,20 +148,17 @@ function buildFusca() {
   ], 1.34, 0.15);
   addMesh(body, bodyGeo, paint, [0, 0, 0]);
 
-  /* rounded cabin dome */
-  const dome = addMesh(body, new THREE.SphereGeometry(1, 26, 18), paint, [0, 1.02, -0.04]);
-  dome.scale.set(0.66, 0.56, 1.03);
-  /* roof cap slightly darker */
-  const roof = addMesh(body, new THREE.SphereGeometry(1, 22, 12, 0, TAU, 0, Math.PI * 0.36), paint, [0, 1.02, -0.04]);
-  roof.scale.set(0.655, 0.565, 1.025);
+  /* teto levemente abaulado (sem bolha) */
+  const roof = addMesh(body, new THREE.SphereGeometry(1, 26, 14), paint, [0, 1.06, -0.04], null, [0.655, 0.3, 1.0]);
+  roof.renderOrder = 0;
 
   /* windshield + rear glass */
-  addMesh(body, new THREE.PlaneGeometry(1.02, 0.44), glass, [0, 1.34, -0.55], [-0.62, 0, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.94, 0.36), glassDark, [0, 1.33, 0.63], [0.66, 0, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.72, 0.3), glass, [-0.68, 1.24, -0.42], [-0.5, -0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.72, 0.3), glass, [0.68, 1.24, -0.42], [-0.5, 0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.66, 0.28), glassDark, [-0.66, 1.24, 0.52], [0.55, -0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.66, 0.28), glassDark, [0.66, 1.24, 0.52], [0.55, 0.9, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.86, 0.3), glass, [0, 1.19, -0.54], [-0.72, 0, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.74, 0.26), glassDark, [0, 1.19, 0.54], [0.66, 0, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.78, 0.28), glass, [-0.652, 1.2, -0.2], [0, Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.78, 0.28), glass, [0.652, 1.2, -0.2], [0, -Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.6, 0.26), glassDark, [-0.648, 1.18, 0.42], [0, Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.6, 0.26), glassDark, [0.648, 1.18, 0.42], [0, -Math.PI / 2, 0]);
 
   /* fenders (arches over each wheel) */
   const fenderGeo = new THREE.TorusGeometry(0.46, 0.115, 8, 18, Math.PI);

@@ -671,11 +671,12 @@ async function boot() {
 
 /* hook de depuração (também útil no console do navegador) */
 window.SAMPA = {
-  state, CARS, DISTRICTS, TEXCACHE, BIGMAP,
+  state, CARS, DISTRICTS, TEXCACHE, BIGMAP, buildVehicle, spawnPlayerModel,
   setDestination, clearRoute, findRoute, loadCity, selectCar, startGame, openMenu,
   drawMinimap, drawBigMap, drawSpeedo, drawRadioViz, getFacadeTextures, makeSurfaceTextures,
   updateTraffic, updateTrafficLights, buildTraffic, updateGPS, updateGPSHud,
   buildFallbackCity, buildCityFromOSM, updateSkyLight, setQuality, spawnPlayerModel,
+  ensureClearSpawn, nearestRoadPoint,
   get city() { return CITY; },
   get player() { return PLAYER; },
   get traffic() { return TRAFFIC; },

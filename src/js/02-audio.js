@@ -107,8 +107,8 @@ function applyAudioSettings() {
   const s = state.settings;
   const vol = (s.sfx || 0) * (state.muted ? 0 : 1);
   AUDIO.master.gain.setTargetAtTime(0.72 * vol, AUDIO.ctx.currentTime, 0.08);
-  if (AUDIO.ambience) AUDIO.ambience.gain.setTargetAtTime(s.ambient ? 0.055 : 0, AUDIO.ctx.currentTime, 0.2);
-  if (AUDIO.rain) AUDIO.rain.gain.setTargetAtTime(state.weather === "rain" ? 0.16 : 0, AUDIO.ctx.currentTime, 0.4);
+  if (AUDIO.ambience) AUDIO.ambience.gain.gain.setTargetAtTime(s.ambient ? 0.055 : 0, AUDIO.ctx.currentTime, 0.2);
+  if (AUDIO.rain) AUDIO.rain.gain.gain.setTargetAtTime(state.weather === "rain" ? 0.16 : 0, AUDIO.ctx.currentTime, 0.4);
   if (AUDIO.engine) AUDIO.engine.gain.gain.setTargetAtTime(s.engine ? 0.55 : 0.0001, AUDIO.ctx.currentTime, 0.3);
 }
 
@@ -136,10 +136,10 @@ function updateEngineAudio(dt) {
   AUDIO.engine.gain.gain.setTargetAtTime(level, t, 0.07);
 
   const sp = Math.abs(state.speed) * 3.6;
-  AUDIO.wind.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
+  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
   AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.5, t, 0.2);
   const slip = state.slip || 0;
-  AUDIO.tires.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
+  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
   AUDIO.tires.filter.frequency.setTargetAtTime(1700 + slip * 900, t, 0.1);
 }
 

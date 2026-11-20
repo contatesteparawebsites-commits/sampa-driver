@@ -186,6 +186,46 @@ function asphaltMaterial(type) {
 }
 
 /* ---------- clear ---------- */
+
+/* ------------------------------------------------------------
+   spawn seguro: nunca nascer dentro de um prédio
+   ------------------------------------------------------------ */
+function nearestRoadPoint(x, z) {
+  const paths = state.roadPaths || [];
+  let best = null, bestD = Infinity, bestI = 0, bestPath = null;
+  for (let k = 0; k < paths.length; k++) {
+    const path = paths[k];
+    for (let i = 0; i < path.length; i++) {
+      const p = path[i];
+      const dx = p.x - x, dz = p.z - z;
+      const d = dx * dx + dz * dz;
+      if (d < bestD) { bestD = d; best = p; bestI = i; bestPath = path; }
+    }
+  }
+  if (!best) return null;
+  const a = bestPath[Math.max(0, bestI - 1)], b = bestPath[Math.min(bestPath.length - 1, bestI + 1)];
+  const yaw = Math.atan2(-(b.x - a.x), -(b.z - a.z));
+  return { x: best.x, z: best.z, yaw, dist: Math.sqrt(bestD) };
+}
+
+function ensureClearSpawn(force) {
+  if (!state.blockers) return false;
+  const blocked = blockersNear(state.blockers, state.x, state.z, 2.6).length > 0;
+  if (!force && !blocked) return false;
+  const rp = nearestRoadPoint(state.x, state.z);
+  if (!rp) return false;
+  if (!force && rp.dist > 900) return false;
+  state.x = rp.x;
+  state.z = rp.z;
+  if (force) state.yaw = rp.yaw;
+  state.vx = 0; state.vz = 0; state.speed = 0;
+  if (typeof PLAYER !== "undefined" && PLAYER && PLAYER.model) {
+    PLAYER.model.root.position.set(state.x, 0, state.z);
+    PLAYER.model.root.rotation.y = state.yaw;
+  }
+  return true;
+}
+
 function clearCity() {
   if (!cityRoot) return;
   const dispose = (obj) => {
@@ -502,6 +542,7 @@ function buildCityFromOSM(elements, district) {
   /* ----- publish state ----- */
   state.roads = roads;
   state.roadPaths = roads.filter((r) => ROAD_DRIVABLE[r.type]).map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
+  ensureClearSpawn(false);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = waters;
@@ -848,6 +889,7 @@ function buildFallbackCity(district) {
 
   state.roads = roads;
   state.roadPaths = roads.map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
+  ensureClearSpawn(true);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = [];

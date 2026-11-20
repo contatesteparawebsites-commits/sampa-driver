@@ -1,1 +1,1 @@
-{"name":"harness","private":true,"dependencies":{"@napi-rs/canvas":"^1.1.1","jsdom":"^24.1.0"}}
+{"name":"harness","private":true,"dependencies":{"@napi-rs/canvas":"^1.1.1","@sparticuz/chromium":"^129.0.0","jsdom":"^24.1.0","puppeteer-core":"^23.11.1"}}

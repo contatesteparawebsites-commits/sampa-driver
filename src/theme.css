@@ -640,3 +640,9 @@ body.touch .hints{display:none}
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
 }
+
+/* brasão estilizado de São Paulo (marca do jogo) */
+.sp-emblem{width:70%;height:70%;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.boot-mark .sp-emblem,.brand-emblem .sp-emblem{width:100%;height:100%}
+.brand-emblem{display:grid;place-items:center;width:22px;height:22px}
+.boot-mark{background:linear-gradient(160deg,#e9e4d6,#cfd8d2);color:#12201a}

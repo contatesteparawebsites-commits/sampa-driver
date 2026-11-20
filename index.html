@@ -653,6 +653,12 @@ body.touch .hints{display:none}
   *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
 }
 
+/* brasão estilizado de São Paulo (marca do jogo) */
+.sp-emblem{width:70%;height:70%;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.boot-mark .sp-emblem,.brand-emblem .sp-emblem{width:100%;height:100%}
+.brand-emblem{display:grid;place-items:center;width:22px;height:22px}
+.boot-mark{background:linear-gradient(160deg,#e9e4d6,#cfd8d2);color:#12201a}
+
 </style>
 </head>
 <body>
@@ -697,7 +703,22 @@ body.touch .hints{display:none}
   <div class="boot-grid"></div>
   <div class="boot-card">
     <div class="boot-top">
-      <div class="boot-mark">SD</div>
+      <div class="boot-mark"><svg class="sp-emblem" viewBox="0 0 112 128" role="img" aria-label="Brasão estilizado do Estado de São Paulo" xmlns="http://www.w3.org/2000/svg">
+<path d="M56 3 60 12 70 13 63 21 65 31 56 26 47 31 49 21 42 13 52 12Z" fill="#f2eee5" stroke="#b8bdc2" stroke-width="1.4"/>
+<g fill="none" stroke="#b88743" stroke-width="3.3" stroke-linecap="round">
+<path d="M25 95C13 79 13 54 25 39M25 58l-10-8m10 20L12 66m17-16 9-10m-13 27 11 3"/>
+<path d="M87 95c12-16 12-41 0-56M87 58l10-8M87 70l13-4M83 51l-9-10M85 77l-11 3"/>
+</g>
+<g fill="#a36e32"><circle cx="16" cy="49" r="3"/><circle cx="12" cy="66" r="3"/><circle cx="36" cy="42" r="3"/><circle cx="96" cy="50" r="3"/><circle cx="100" cy="66" r="3"/><circle cx="76" cy="42" r="3"/></g>
+<path d="M33 31h46l-3 43c-2 18-13 29-20 34C49 103 38 92 36 74Z" fill="#c9293b" stroke="#eeeae1" stroke-width="2.8"/>
+<path d="M56 41v44" stroke="#f4f1e9" stroke-width="3.8" stroke-linecap="round"/>
+<path d="M56 37 51 45h10Z" fill="#f4f1e9"/>
+<path d="M56 83l-5 8h10Z" fill="#d5d9dd"/>
+<text x="45" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+<text x="67" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">P</text>
+<path d="M20 105q36 12 72 0l-5 15H25Z" fill="#9e202e" stroke="#e9e2d7" stroke-width="1.5"/>
+<text x="56" y="115" fill="#fff" font-family="Arial,sans-serif" font-size="5.3" font-weight="bold" text-anchor="middle" letter-spacing=".25">PRO BRASILIA FIANT EXIMIA</text>
+</svg></div>
       <div class="boot-id">
         <b>SAMPA DRIVER</b>
         <small>OPEN WORLD ROLEPLAY · SÃO PAULO / BR</small>
@@ -719,7 +740,22 @@ body.touch .hints{display:none}
 <div id="app" class="app" aria-hidden="false">
   <aside class="rail">
     <button class="rail-logo" data-page="home" title="SAMPA DRIVER">
-      <span>SD</span>
+      <span class="brand-emblem"><svg class="sp-emblem" viewBox="0 0 112 128" role="img" aria-label="Brasão estilizado do Estado de São Paulo" xmlns="http://www.w3.org/2000/svg">
+<path d="M56 3 60 12 70 13 63 21 65 31 56 26 47 31 49 21 42 13 52 12Z" fill="#f2eee5" stroke="#b8bdc2" stroke-width="1.4"/>
+<g fill="none" stroke="#b88743" stroke-width="3.3" stroke-linecap="round">
+<path d="M25 95C13 79 13 54 25 39M25 58l-10-8m10 20L12 66m17-16 9-10m-13 27 11 3"/>
+<path d="M87 95c12-16 12-41 0-56M87 58l10-8M87 70l13-4M83 51l-9-10M85 77l-11 3"/>
+</g>
+<g fill="#a36e32"><circle cx="16" cy="49" r="3"/><circle cx="12" cy="66" r="3"/><circle cx="36" cy="42" r="3"/><circle cx="96" cy="50" r="3"/><circle cx="100" cy="66" r="3"/><circle cx="76" cy="42" r="3"/></g>
+<path d="M33 31h46l-3 43c-2 18-13 29-20 34C49 103 38 92 36 74Z" fill="#c9293b" stroke="#eeeae1" stroke-width="2.8"/>
+<path d="M56 41v44" stroke="#f4f1e9" stroke-width="3.8" stroke-linecap="round"/>
+<path d="M56 37 51 45h10Z" fill="#f4f1e9"/>
+<path d="M56 83l-5 8h10Z" fill="#d5d9dd"/>
+<text x="45" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+<text x="67" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">P</text>
+<path d="M20 105q36 12 72 0l-5 15H25Z" fill="#9e202e" stroke="#e9e2d7" stroke-width="1.5"/>
+<text x="56" y="115" fill="#fff" font-family="Arial,sans-serif" font-size="5.3" font-weight="bold" text-anchor="middle" letter-spacing=".25">PRO BRASILIA FIANT EXIMIA</text>
+</svg></span>
     </button>
     <nav class="rail-nav">
       <button class="rail-btn active" data-page="home"><svg class="ico"><use href="#i-wheel"/></svg><span>Início</span></button>
@@ -1661,8 +1697,8 @@ function applyAudioSettings() {
   const s = state.settings;
   const vol = (s.sfx || 0) * (state.muted ? 0 : 1);
   AUDIO.master.gain.setTargetAtTime(0.72 * vol, AUDIO.ctx.currentTime, 0.08);
-  if (AUDIO.ambience) AUDIO.ambience.gain.setTargetAtTime(s.ambient ? 0.055 : 0, AUDIO.ctx.currentTime, 0.2);
-  if (AUDIO.rain) AUDIO.rain.gain.setTargetAtTime(state.weather === "rain" ? 0.16 : 0, AUDIO.ctx.currentTime, 0.4);
+  if (AUDIO.ambience) AUDIO.ambience.gain.gain.setTargetAtTime(s.ambient ? 0.055 : 0, AUDIO.ctx.currentTime, 0.2);
+  if (AUDIO.rain) AUDIO.rain.gain.gain.setTargetAtTime(state.weather === "rain" ? 0.16 : 0, AUDIO.ctx.currentTime, 0.4);
   if (AUDIO.engine) AUDIO.engine.gain.gain.setTargetAtTime(s.engine ? 0.55 : 0.0001, AUDIO.ctx.currentTime, 0.3);
 }
 
@@ -1690,10 +1726,10 @@ function updateEngineAudio(dt) {
   AUDIO.engine.gain.gain.setTargetAtTime(level, t, 0.07);
 
   const sp = Math.abs(state.speed) * 3.6;
-  AUDIO.wind.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
+  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
   AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.5, t, 0.2);
   const slip = state.slip || 0;
-  AUDIO.tires.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
+  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
   AUDIO.tires.filter.frequency.setTargetAtTime(1700 + slip * 900, t, 0.1);
 }
 
@@ -1779,7 +1815,7 @@ function extrudeProfile(points, width, bevel) {
   geo.rotateY(-Math.PI / 2);
   geo.computeBoundingBox();
   const bb = geo.boundingBox;
-  geo.translate(0, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
+  geo.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   geo.computeVertexNormals();
   return geo;
 }
@@ -1894,13 +1930,13 @@ function buildFusca() {
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
-  const paint = PHYS(spec.color, { roughness: 0.3, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.09 });
+  const paint = PHYS(spec.color, { roughness: 0.42, metalness: 0.4, clearcoat: 0.75, clearcoatRoughness: 0.16 });
   const paintDark = PHYS(mixHex(spec.color, 0x000000, 0.25), { roughness: 0.35, metalness: 0.5 });
   const chrome = new THREE.MeshPhysicalMaterial({ color: 0xd6dcda, roughness: 0.16, metalness: 1, clearcoat: 1 });
   const dark = MAT(0x14191b, { roughness: 0.75 });
   const rubber = MAT(0x14181a, { roughness: 0.98 });
-  const glass = new THREE.MeshPhysicalMaterial({ color: 0xa9cbd6, roughness: 0.06, metalness: 0.1, transmission: 0, transparent: true, opacity: 0.34, clearcoat: 1 });
-  const glassDark = glass.clone(); glassDark.opacity = 0.24; glassDark.color.setHex(0x7fa2ad);
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x8fb6c4, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.55, clearcoat: 1 });
+  const glassDark = glass.clone(); glassDark.opacity = 0.45; glassDark.color.setHex(0x6d94a2);
   const headMat = basicMat(0xfff4d6, 0xffe9b8, 0.25);
   const tailMat = basicMat(0x8c1f1a, 0xd0231b, 0.15);
   const amberMat = basicMat(0x8a4a12, 0xff8a1f, 0.15);
@@ -1913,20 +1949,17 @@ function buildFusca() {
   ], 1.34, 0.15);
   addMesh(body, bodyGeo, paint, [0, 0, 0]);
 
-  /* rounded cabin dome */
-  const dome = addMesh(body, new THREE.SphereGeometry(1, 26, 18), paint, [0, 1.02, -0.04]);
-  dome.scale.set(0.66, 0.56, 1.03);
-  /* roof cap slightly darker */
-  const roof = addMesh(body, new THREE.SphereGeometry(1, 22, 12, 0, TAU, 0, Math.PI * 0.36), paint, [0, 1.02, -0.04]);
-  roof.scale.set(0.655, 0.565, 1.025);
+  /* teto levemente abaulado (sem bolha) */
+  const roof = addMesh(body, new THREE.SphereGeometry(1, 26, 14), paint, [0, 1.06, -0.04], null, [0.655, 0.3, 1.0]);
+  roof.renderOrder = 0;
 
   /* windshield + rear glass */
-  addMesh(body, new THREE.PlaneGeometry(1.02, 0.44), glass, [0, 1.34, -0.55], [-0.62, 0, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.94, 0.36), glassDark, [0, 1.33, 0.63], [0.66, 0, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.72, 0.3), glass, [-0.68, 1.24, -0.42], [-0.5, -0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.72, 0.3), glass, [0.68, 1.24, -0.42], [-0.5, 0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.66, 0.28), glassDark, [-0.66, 1.24, 0.52], [0.55, -0.9, 0]);
-  addMesh(body, new THREE.PlaneGeometry(0.66, 0.28), glassDark, [0.66, 1.24, 0.52], [0.55, 0.9, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.86, 0.3), glass, [0, 1.19, -0.54], [-0.72, 0, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.74, 0.26), glassDark, [0, 1.19, 0.54], [0.66, 0, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.78, 0.28), glass, [-0.652, 1.2, -0.2], [0, Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.78, 0.28), glass, [0.652, 1.2, -0.2], [0, -Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.6, 0.26), glassDark, [-0.648, 1.18, 0.42], [0, Math.PI / 2, 0]);
+  addMesh(body, new THREE.PlaneGeometry(0.6, 0.26), glassDark, [0.648, 1.18, 0.42], [0, -Math.PI / 2, 0]);
 
   /* fenders (arches over each wheel) */
   const fenderGeo = new THREE.TorusGeometry(0.46, 0.115, 8, 18, Math.PI);
@@ -3188,6 +3221,46 @@ function asphaltMaterial(type) {
 }
 
 /* ---------- clear ---------- */
+
+/* ------------------------------------------------------------
+   spawn seguro: nunca nascer dentro de um prédio
+   ------------------------------------------------------------ */
+function nearestRoadPoint(x, z) {
+  const paths = state.roadPaths || [];
+  let best = null, bestD = Infinity, bestI = 0, bestPath = null;
+  for (let k = 0; k < paths.length; k++) {
+    const path = paths[k];
+    for (let i = 0; i < path.length; i++) {
+      const p = path[i];
+      const dx = p.x - x, dz = p.z - z;
+      const d = dx * dx + dz * dz;
+      if (d < bestD) { bestD = d; best = p; bestI = i; bestPath = path; }
+    }
+  }
+  if (!best) return null;
+  const a = bestPath[Math.max(0, bestI - 1)], b = bestPath[Math.min(bestPath.length - 1, bestI + 1)];
+  const yaw = Math.atan2(-(b.x - a.x), -(b.z - a.z));
+  return { x: best.x, z: best.z, yaw, dist: Math.sqrt(bestD) };
+}
+
+function ensureClearSpawn(force) {
+  if (!state.blockers) return false;
+  const blocked = blockersNear(state.blockers, state.x, state.z, 2.6).length > 0;
+  if (!force && !blocked) return false;
+  const rp = nearestRoadPoint(state.x, state.z);
+  if (!rp) return false;
+  if (!force && rp.dist > 900) return false;
+  state.x = rp.x;
+  state.z = rp.z;
+  if (force) state.yaw = rp.yaw;
+  state.vx = 0; state.vz = 0; state.speed = 0;
+  if (typeof PLAYER !== "undefined" && PLAYER && PLAYER.model) {
+    PLAYER.model.root.position.set(state.x, 0, state.z);
+    PLAYER.model.root.rotation.y = state.yaw;
+  }
+  return true;
+}
+
 function clearCity() {
   if (!cityRoot) return;
   const dispose = (obj) => {
@@ -3504,6 +3577,7 @@ function buildCityFromOSM(elements, district) {
   /* ----- publish state ----- */
   state.roads = roads;
   state.roadPaths = roads.filter((r) => ROAD_DRIVABLE[r.type]).map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
+  ensureClearSpawn(false);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = waters;
@@ -3850,6 +3924,7 @@ function buildFallbackCity(district) {
 
   state.roads = roads;
   state.roadPaths = roads.map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
+  ensureClearSpawn(true);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = [];
@@ -4482,6 +4557,7 @@ state.slip = 0;
 state.viewDist = 2400;
 
 function spawnPlayerModel() {
+  if (typeof ensureClearSpawn === "function") ensureClearSpawn(!PLAYER.model);
   if (PLAYER.group) {
     scene.remove(PLAYER.group);
     PLAYER.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -4748,7 +4824,7 @@ function updateDrive(dt) {
   if (model.shadow) model.shadow.position.set(0, 0.035, 0);
 
   /* engine audio */
-  updateEngineAudio(dt);
+  try { updateEngineAudio(dt); } catch (e) { if (!state.audioWarned) { state.audioWarned = true; console.warn('áudio:', e && e.message); } }
 
   updateDriveHUD(kmh, offroad, handbrake);
   updateCamera(dt, offroad);
@@ -4948,17 +5024,17 @@ function initShowroom() {
   renderer.setClearColor(0x000000, 0);
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 0.94;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const sc = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-  cam.position.set(4.6, 2.5, 6.4);
-  cam.lookAt(0, 0.7, 0);
+  const cam = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  cam.position.set(6.0, 2.9, 8.2);
+  cam.lookAt(0, 0.58, 0);
 
-  const hemi = new THREE.HemisphereLight(0xdff1ff, 0x1a2226, 0.9);
+  const hemi = new THREE.HemisphereLight(0xdff1ff, 0x1a2226, 0.55);
   sc.add(hemi);
-  const key = new THREE.DirectionalLight(0xfff2dc, 3.1);
+  const key = new THREE.DirectionalLight(0xfff2dc, 1.9);
   key.position.set(5, 7, 4);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -4966,18 +5042,18 @@ function initShowroom() {
   key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
   key.shadow.normalBias = 0.02;
   sc.add(key);
-  const rim = new THREE.DirectionalLight(0x9fe8ff, 2.6);
+  const rim = new THREE.DirectionalLight(0x9fe8ff, 1.4);
   rim.position.set(-6, 3.4, -4.5);
   sc.add(rim);
   const fill = new THREE.DirectionalLight(0xd3fb68, 0.7);
   fill.position.set(-2, 1.2, 6);
   sc.add(fill);
-  const spot = new THREE.SpotLight(0xffffff, 6, 22, 0.6, 0.5, 1.4);
+  const spot = new THREE.SpotLight(0xffffff, 2.4, 22, 0.62, 0.55, 1.4);
   spot.position.set(0, 7.5, 0);
   sc.add(spot);
 
   /* studio floor */
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0e161b, roughness: 0.36, metalness: 0.55, transparent: true, opacity: 0.95 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0b1318, roughness: 0.62, metalness: 0.2, transparent: true, opacity: 0.96 });
   const floor = new THREE.Mesh(new THREE.CircleGeometry(5.4, 48), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0.001;
@@ -7203,11 +7279,12 @@ async function boot() {
 
 /* hook de depuração (também útil no console do navegador) */
 window.SAMPA = {
-  state, CARS, DISTRICTS, TEXCACHE, BIGMAP,
+  state, CARS, DISTRICTS, TEXCACHE, BIGMAP, buildVehicle, spawnPlayerModel,
   setDestination, clearRoute, findRoute, loadCity, selectCar, startGame, openMenu,
   drawMinimap, drawBigMap, drawSpeedo, drawRadioViz, getFacadeTextures, makeSurfaceTextures,
   updateTraffic, updateTrafficLights, buildTraffic, updateGPS, updateGPSHud,
   buildFallbackCity, buildCityFromOSM, updateSkyLight, setQuality, spawnPlayerModel,
+  ensureClearSpawn, nearestRoadPoint,
   get city() { return CITY; },
   get player() { return PLAYER; },
   get traffic() { return TRAFFIC; },

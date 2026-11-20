@@ -8,6 +8,7 @@ state.slip = 0;
 state.viewDist = 2400;
 
 function spawnPlayerModel() {
+  if (typeof ensureClearSpawn === "function") ensureClearSpawn(!PLAYER.model);
   if (PLAYER.group) {
     scene.remove(PLAYER.group);
     PLAYER.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -274,7 +275,7 @@ function updateDrive(dt) {
   if (model.shadow) model.shadow.position.set(0, 0.035, 0);
 
   /* engine audio */
-  updateEngineAudio(dt);
+  try { updateEngineAudio(dt); } catch (e) { if (!state.audioWarned) { state.audioWarned = true; console.warn('áudio:', e && e.message); } }
 
   updateDriveHUD(kmh, offroad, handbrake);
   updateCamera(dt, offroad);
@@ -474,17 +475,17 @@ function initShowroom() {
   renderer.setClearColor(0x000000, 0);
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 0.94;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const sc = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-  cam.position.set(4.6, 2.5, 6.4);
-  cam.lookAt(0, 0.7, 0);
+  const cam = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  cam.position.set(6.0, 2.9, 8.2);
+  cam.lookAt(0, 0.58, 0);
 
-  const hemi = new THREE.HemisphereLight(0xdff1ff, 0x1a2226, 0.9);
+  const hemi = new THREE.HemisphereLight(0xdff1ff, 0x1a2226, 0.55);
   sc.add(hemi);
-  const key = new THREE.DirectionalLight(0xfff2dc, 3.1);
+  const key = new THREE.DirectionalLight(0xfff2dc, 1.9);
   key.position.set(5, 7, 4);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -492,18 +493,18 @@ function initShowroom() {
   key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
   key.shadow.normalBias = 0.02;
   sc.add(key);
-  const rim = new THREE.DirectionalLight(0x9fe8ff, 2.6);
+  const rim = new THREE.DirectionalLight(0x9fe8ff, 1.4);
   rim.position.set(-6, 3.4, -4.5);
   sc.add(rim);
   const fill = new THREE.DirectionalLight(0xd3fb68, 0.7);
   fill.position.set(-2, 1.2, 6);
   sc.add(fill);
-  const spot = new THREE.SpotLight(0xffffff, 6, 22, 0.6, 0.5, 1.4);
+  const spot = new THREE.SpotLight(0xffffff, 2.4, 22, 0.62, 0.55, 1.4);
   spot.position.set(0, 7.5, 0);
   sc.add(spot);
 
   /* studio floor */
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0e161b, roughness: 0.36, metalness: 0.55, transparent: true, opacity: 0.95 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0b1318, roughness: 0.62, metalness: 0.2, transparent: true, opacity: 0.96 });
   const floor = new THREE.Mesh(new THREE.CircleGeometry(5.4, 48), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0.001;
