@@ -2859,7 +2859,7 @@ function createVehicle(type){
       }catch(extraError){
         console.warn("Detalhes opcionais do mapa:",extraError&&extraError.message||extraError);
       }
-      const stats=createOSMWorld(unique,state.loadedChunks.size>0);
+      const stats=createOSMWorld(unique,state.loadedChunks.size>0||state.started);
       if(stats.roads<4||stats.buildings<5){
         if(!state.loadedChunks.size){
           state.fallbackActive=false;
