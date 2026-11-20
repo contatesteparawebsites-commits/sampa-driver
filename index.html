@@ -1927,7 +1927,7 @@ function rand(min, max){
     }
     return style===0?0x9a5842:style===5?0x765044:0x626c6d;
   }
-  function createGableRoof(minX,maxX,minZ,maxZ,y,height,color){
+  function createGableRoof(minX,maxX,minZ,maxZ,y,height,color,batches){
     const mx=(minX+maxX)/2,mz=(minZ+maxZ)/2,verts=[];
     const tri=(a,b,c)=>verts.push(...a,...b,...c);
     if(maxX-minX>=maxZ-minZ){
@@ -1937,11 +1937,9 @@ function rand(min, max){
       const a=[minX,y,minZ],b=[minX,y,maxZ],c=[mx,y+height,maxZ],d=[mx,y+height,minZ],e=[maxX,y,minZ],f=[maxX,y,maxZ];
       tri(a,b,c);tri(a,c,d);tri(d,c,f);tri(d,f,e);tri(a,d,e);tri(b,f,c);
     }
-    const geometry=new THREE.BufferGeometry();
-    geometry.setAttribute("position",new THREE.Float32BufferAttribute(verts,3));
-    geometry.computeVertexNormals();
-    const roof=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.94,side:THREE.DoubleSide}));
-    roof.castShadow=true;roof.receiveShadow=true;cityRoot.add(roof);
+    const key=String(color);
+    if(!batches[key])batches[key]=[];
+    for(const value of verts)batches[key].push(value);
   }
   function buildBuilding(el,buildingMaterials,batches,details){
     const tags=el.tags||{},pts=(el.geometry||[]).map(g=>worldPoint(g.lat,g.lon));
@@ -1952,11 +1950,12 @@ function rand(min, max){
     for(const p of ring){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z)}
     const w=maxX-minX,d=maxZ-minZ,area=w*d;
     if(w<2||d<2||w>280||d>280||area<12)return null;
+    const style=buildingStyle(tags,area);
     let height=parseFloat(tags.height||tags["building:height"]);
     const levels=parseInt(tags["building:levels"],10);
-    if(!Number.isFinite(height)||height<=0)height=(Number.isFinite(levels)&&levels>0?levels:Math.max(1,Math.round(rand(1,5))))*3.05;
+    const estimatedFloors=({0:1,1:4,2:5,3:2,4:1,5:2})[style]||2;
+    if(!Number.isFinite(height)||height<=0)height=(Number.isFinite(levels)&&levels>0?levels:estimatedFloors)*3.05;
     height=Math.max(2.8,Math.min(190,height));
-    const style=buildingStyle(tags,area);
     const geometry=new THREE.ExtrudeGeometry(shapeFromPoints(ring),{depth:height,bevelEnabled:false,curveSegments:1,steps:1});
     geometry.rotateX(Math.PI/2);geometry.translate(0,height,0);geometry.computeVertexNormals();
     const positions=geometry.toNonIndexed().attributes.position.array,batch=batches[style];
@@ -1980,7 +1979,7 @@ function rand(min, max){
       }
     }
     if(style===0&&w<36&&d<36&&height<15){
-      createGableRoof(minX-.25,maxX+.25,minZ-.25,maxZ+.25,height-.1,Math.max(1.1,Math.min(4,Math.min(w,d)*.2)),roofColor(tags,style));
+      createGableRoof(minX-.25,maxX+.25,minZ-.25,maxZ+.25,height-.1,Math.max(1.1,Math.min(4,Math.min(w,d)*.2)),roofColor(tags,style),details.roofs);
     }else{
       const parapet=new THREE.Mesh(new THREE.BoxGeometry(Math.min(w,55),.28,Math.min(d,55)),material(0x777d79,.92));
       parapet.position.set((minX+maxX)/2,height+.11,(minZ+maxZ)/2);parapet.castShadow=true;cityRoot.add(parapet);
@@ -2033,29 +2032,38 @@ function rand(min, max){
   }
   function createRealTrees(elements){
     if(!elements.length)return;
-    const treeGeo=new THREE.ConeGeometry(2.8,7,7),trunkGeo=new THREE.CylinderGeometry(.18,.28,2.5,7);
-    const leaves=material(0x47734b,.96),trunk=material(0x594737,1);
-    const group=new THREE.Group();
-    elements.slice(0,1800).forEach(el=>{
-      const p=osmPoint(el);if(!p)return;const pos=worldPoint(p.lat,p.lon),tree=new THREE.Group();
-      const stem=new THREE.Mesh(trunkGeo,trunk);stem.position.y=1.25;tree.add(stem);
-      const crown=new THREE.Mesh(treeGeo,leaves);crown.position.y=5.1;crown.scale.set(rand(.75,1.2),1,rand(.75,1.2));crown.castShadow=true;tree.add(crown);
-      tree.position.set(pos.x,0,pos.z);group.add(tree);
-    });
-    cityRoot.add(group);
+    const selected=elements.slice(0,3500),treeGeo=new THREE.ConeGeometry(2.8,7,7),trunkGeo=new THREE.CylinderGeometry(.18,.28,2.5,7);
+    const leaves=new THREE.InstancedMesh(treeGeo,material(0x47734b,.96),selected.length);
+    const trunks=new THREE.InstancedMesh(trunkGeo,material(0x594737,1),selected.length);
+    const dummy=new THREE.Object3D();let count=0;
+    for(const el of selected){
+      const p=osmPoint(el);if(!p)continue;
+      const pos=worldPoint(p.lat,p.lon);
+      dummy.position.set(pos.x,5.1,pos.z);const scale=rand(.75,1.2);dummy.scale.set(scale,1,scale);dummy.rotation.y=rand(0,Math.PI);dummy.updateMatrix();leaves.setMatrixAt(count,dummy.matrix);
+      dummy.position.set(pos.x,1.25,pos.z);dummy.scale.set(1,1,1);dummy.rotation.set(0,0,0);dummy.updateMatrix();trunks.setMatrixAt(count,dummy.matrix);
+      count++;
+    }
+    leaves.count=count;trunks.count=count;leaves.instanceMatrix.needsUpdate=true;trunks.instanceMatrix.needsUpdate=true;
+    cityRoot.add(trunks,leaves);
   }
   function createRealStreetLamps(elements){
     if(!elements.length)return;
-    const poleGeo=new THREE.CylinderGeometry(.055,.085,5.2,7),poleMat=material(0x343d40,.55,.25);
-    const bulbMat=new THREE.MeshStandardMaterial({color:0xffe6b8,emissive:0xffd391,emissiveIntensity:.8});
-    elements.slice(0,900).forEach(el=>{
-      const p=osmPoint(el);if(!p)return;const point=worldPoint(p.lat,p.lon);
-      const pole=new THREE.Mesh(poleGeo,poleMat);pole.position.set(point.x,2.6,point.z);pole.castShadow=true;cityRoot.add(pole);
-      const arm=new THREE.Mesh(new THREE.BoxGeometry(.9,.07,.07),poleMat);arm.position.set(point.x+.42,5.08,point.z);cityRoot.add(arm);
-      const bulb=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),bulbMat);bulb.position.set(point.x+.82,5.04,point.z);cityRoot.add(bulb);
-    });
+    const selected=elements.slice(0,1800),poleGeo=new THREE.CylinderGeometry(.055,.085,5.2,7),armGeo=new THREE.BoxGeometry(.9,.07,.07),bulbGeo=new THREE.SphereGeometry(.15,8,6);
+    const poleMat=material(0x343d40,.55,.25),bulbMat=new THREE.MeshStandardMaterial({color:0xffe6b8,emissive:0xffd391,emissiveIntensity:.8});
+    const poles=new THREE.InstancedMesh(poleGeo,poleMat,selected.length),arms=new THREE.InstancedMesh(armGeo,poleMat,selected.length),bulbs=new THREE.InstancedMesh(bulbGeo,bulbMat,selected.length);
+    const dummy=new THREE.Object3D();let count=0;
+    for(const el of selected){
+      const p=osmPoint(el);if(!p)continue;const point=worldPoint(p.lat,p.lon);
+      dummy.position.set(point.x,2.6,point.z);dummy.updateMatrix();poles.setMatrixAt(count,dummy.matrix);
+      dummy.position.set(point.x+.42,5.08,point.z);dummy.updateMatrix();arms.setMatrixAt(count,dummy.matrix);
+      dummy.position.set(point.x+.82,5.04,point.z);dummy.updateMatrix();bulbs.setMatrixAt(count,dummy.matrix);
+      count++;
+    }
+    poles.count=count;arms.count=count;bulbs.count=count;
+    poles.instanceMatrix.needsUpdate=true;arms.instanceMatrix.needsUpdate=true;bulbs.instanceMatrix.needsUpdate=true;
+    cityRoot.add(poles,arms,bulbs);
   }
-function createOSMWorld(elements,append=false){
+  function createOSMWorld(elements,append=false){
     if(!append){
       cityRoot.clear();state.roadPaths=[];state.blockers=[];state.traffic=[];state.poiLabels=[];state.poiIds=new Set();
     }
@@ -2063,14 +2071,15 @@ function createOSMWorld(elements,append=false){
     const roadVertices=[],markVertices=[],sidewalkVertices=[],sidewalks=[];
     const roadSurface=material(0x343a3d,.98),sideSurface=material(0x96978e,1),markMat=material(0xd9d7c9,.9);
     const buildingMaterials=[material(0xc5b69e,.94),material(0x969a97,.91),material(0x71868c,.68,.06),material(0xb6a88e,.88),material(0x858783,.95),material(0xb0a18c,.9)];
-    const buildingElements=[],roadElements=[],poiElements=[],treeElements=[],lampElements=[];
-    const buildingBatches=[[],[],[],[],[],[]],details={frames:[],windows:[],balconies:[],awnings:[]};
+    const buildingElements=[],roadElements=[],poiElements=[],treeElements=[],lampElements=[],landElements=[];
+    const buildingBatches=[[],[],[],[],[],[]],details={frames:[],windows:[],balconies:[],awnings:[],roofs:{}};
     for(const el of elements||[]){
       const tags=el.tags||{};
       if(el.geometry&&tags.highway)roadElements.push(el);
       if(el.geometry&&tags.building)buildingElements.push(el);
       if(tags.natural==="tree")treeElements.push(el);
       if(tags.highway==="street_lamp")lampElements.push(el);
+      if(el.geometry&&(tags.leisure||tags.landuse==="grass"||tags.landuse==="forest"||tags.landuse==="recreation_ground"||tags.natural==="water"))landElements.push(el);
       if((tags.shop||tags.amenity||tags.tourism||tags.leisure||tags.office||tags.healthcare)&&tags.name)poiElements.push(el);
     }
     for(const el of roadElements){
@@ -2087,6 +2096,15 @@ function createOSMWorld(elements,append=false){
         }
       }
     }
+    for(const el of landElements){
+      const pts=(el.geometry||[]).map(g=>worldPoint(g.lat,g.lon));
+      if(pts.length<4||distance2(pts[0],pts[pts.length-1])>4)continue;
+      const shape=shapeFromPoints(pts.slice(0,-1));
+      const geometry=new THREE.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);
+      const water=el.tags.natural==="water",green=el.tags.landuse==="forest"||el.tags.leisure==="park"||el.tags.leisure==="garden";
+      const surface=new THREE.Mesh(geometry,material(water?0x527e91:green?0x587a50:0x81946d,1));
+      surface.position.y=water?.012:.008;surface.receiveShadow=true;cityRoot.add(surface);
+    }
     const roadGeom=new THREE.BufferGeometry();roadGeom.setAttribute("position",new THREE.Float32BufferAttribute(roadVertices,3));roadGeom.computeVertexNormals();
     const roadMesh=new THREE.Mesh(roadGeom,roadSurface);roadMesh.receiveShadow=true;cityRoot.add(roadMesh);
     const marksGeo=new THREE.BufferGeometry();marksGeo.setAttribute("position",new THREE.Float32BufferAttribute(markVertices,3));marksGeo.computeVertexNormals();cityRoot.add(new THREE.Mesh(marksGeo,markMat));
@@ -2099,6 +2117,13 @@ function createOSMWorld(elements,append=false){
       if(!buildingBatches[i].length)continue;
       const geometry=new THREE.BufferGeometry();geometry.setAttribute("position",new THREE.Float32BufferAttribute(buildingBatches[i],3));geometry.computeVertexNormals();
       const mesh=new THREE.Mesh(geometry,buildingMaterials[i]);mesh.castShadow=true;mesh.receiveShadow=true;cityRoot.add(mesh);
+    }
+    for(const color in details.roofs){
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute("position",new THREE.Float32BufferAttribute(details.roofs[color],3));
+      geometry.computeVertexNormals();
+      const roof=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:Number(color),roughness:.94,side:THREE.DoubleSide}));
+      roof.castShadow=true;roof.receiveShadow=true;cityRoot.add(roof);
     }
     drawFacadeInstances(details);
     for(const el of poiElements){const p=osmPoint(el);if(!p)continue;const pos=worldPoint(p.lat,p.lon);createPlaceLabel(el.tags.name,el.tags.shop||el.tags.amenity||el.tags.tourism||el.tags.leisure||el.tags.office,pos.x,pos.z,5,"poi/"+el.type+"/"+el.id)}
@@ -2430,6 +2455,9 @@ function createVehicle(type){
     return '[out:json][timeout:28];('+
       'way'+road+'(around:'+radius+','+lat+','+lon+');'+
       'way["building"](around:'+radius+','+lat+','+lon+');'+
+      'way["leisure"~"^(park|garden|playground|sports_centre|stadium)$"](around:'+radius+','+lat+','+lon+');'+
+      'way["landuse"~"^(grass|forest|recreation_ground)$"](around:'+radius+','+lat+','+lon+');'+
+      'way["natural"="water"](around:'+radius+','+lat+','+lon+');'+
       'node["shop"](around:'+radius+','+lat+','+lon+');'+
       'way["shop"](around:'+radius+','+lat+','+lon+');'+
       'node'+amenities+'(around:'+radius+','+lat+','+lon+');'+
