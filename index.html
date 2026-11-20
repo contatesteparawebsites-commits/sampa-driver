@@ -493,7 +493,7 @@ function addSidewalks(pts,width,collection){
   }
  }
 }
-function buildBuilding(el,buildingMaterials,windowMaterial){
+function buildBuilding(el,buildingMaterials,windowMaterial,batches){
  const pts=el.geometry.map(g=>worldPoint(g.lat,g.lon));
  if(!closeRing(pts))return null;
  const ring=pts.slice(0,-1);
@@ -508,22 +508,13 @@ function buildBuilding(el,buildingMaterials,windowMaterial){
  h=Math.max(4,Math.min(155,h));
  const shape=shapeFromPoints(ring);
  const geom=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:1,steps:1});
- geom.rotateX(Math.PI/2);geom.computeVertexNormals();
+ geom.rotateX(Math.PI/2);geom.translate(0,h,0);geom.computeVertexNormals();
  const type=tags.building;
- let index=type==="industrial"||type==="warehouse"?3:type==="commercial"||type==="retail"||type==="office"?2:Math.floor(rand(0,3));
- const mesh=new THREE.Mesh(geom,[buildingMaterials[index],buildingMaterials[4]]);
- mesh.position.y=h;mesh.castShadow=true;mesh.receiveShadow=true;cityRoot.add(mesh);
+ const index=type==="industrial"||type==="warehouse"?3:type==="commercial"||type==="retail"||type==="office"?2:Math.floor(rand(0,3));
+ const flat=geom.toNonIndexed(),positions=flat.attributes.position.array,batch=batches[index];
+ for(let i=0;i<positions.length;i++)batch.push(positions[i]);
  const center={x:(minX+maxX)/2,z:(minZ+maxZ)/2};
  state.blockers.push({minX,maxX,minZ,maxZ,ring,h});
- if(area>100&&Math.random()<.55){
-  const roofH=rand(.5,2.5);
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(w*.18,roofH,d*.18),buildingMaterials[5]);
-  roof.position.set(center.x,h+roofH*.5,center.z);roof.castShadow=true;cityRoot.add(roof);
- }
- if(area>300&&Math.random()<.23){
-  const unit=new THREE.Mesh(new THREE.BoxGeometry(Math.min(w*.25,7),1.2,Math.min(d*.25,7)),buildingMaterials[5]);
-  unit.position.set(center.x+rand(-w*.12,w*.12),h+.6,center.z+rand(-d*.12,d*.12));unit.castShadow=true;cityRoot.add(unit);
- }
  return {center,w,d,h};
 }
 function createOSMWorld(elements){
@@ -536,7 +527,7 @@ function createOSMWorld(elements){
   material(0x555e60,.9),material(0x9ca5a2,.75)
  ];
  const windowMat=material(0x263e48,.45,.25);
- const buildingElements=[],roadElements=[];
+ const buildingElements=[],roadElements=[],buildingBatches=[[],[],[],[]];
  for(const el of elements||[]){
   if(!el.geometry||el.geometry.length<2||!el.tags)continue;
   if(el.tags.highway)roadElements.push(el);
@@ -576,7 +567,15 @@ function createOSMWorld(elements){
  let accepted=0;
  for(const el of buildingElements){
   if(accepted>=1600)break;
-  if(buildBuilding(el,buildingMaterials,windowMat))accepted++;
+  if(buildBuilding(el,buildingMaterials,windowMat,buildingBatches))accepted++;
+ }
+ for(let i=0;i<buildingBatches.length;i++){
+  if(!buildingBatches[i].length)continue;
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute("position",new THREE.Float32BufferAttribute(buildingBatches[i],3));
+  geometry.computeVertexNormals();
+  const mesh=new THREE.Mesh(geometry,buildingMaterials[i]);
+  mesh.castShadow=true;mesh.receiveShadow=true;cityRoot.add(mesh);
  }
  buildingCount=accepted;roadCount=state.roadPaths.length;
  createStreetFurniture();
