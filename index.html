@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#080e13">
+<meta name="theme-color" content="#15171c">
+<meta name="description" content="Sampa Driver — roleplay de direção livre pelas ruas de São Paulo.">
 <title>SAMPA DRIVER — São Paulo Roleplay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1566,6 +1567,199 @@ kbd{
 
 #osm-credit{position:fixed;z-index:16;left:50%;bottom:4px;transform:translateX(-50%);color:#d5dfdeaa;font:7px "DM Mono";letter-spacing:.08em;white-space:nowrap;pointer-events:none;text-shadow:0 1px 4px #000}
 @media(max-width:700px){#osm-credit{font-size:6px;bottom:1px;max-width:94vw;overflow:hidden;text-overflow:ellipsis}}
+
+:root{
+  --ink:#101318;
+  --ink2:#171c23;
+  --panel:rgba(17,22,29,.94);
+  --panel2:#252c35;
+  --line:rgba(239,238,232,.13);
+  --muted:#a8abb0;
+  --white:#f4f1e9;
+  --lime:#d52e40;
+  --cyan:#7398c9;
+  --orange:#c99b62;
+  --red:#ef5963;
+  --shadow:0 24px 65px rgba(0,0,0,.38)
+}
+html,body{background:#101318;color:var(--white);font-family:Manrope,Arial,sans-serif}
+#world{background:#18202a}
+#screen-fx{background:linear-gradient(180deg,rgba(5,8,12,.16),transparent 32%,transparent 72%,rgba(4,7,11,.42))}
+#screen-fx:after{background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.24) 100%)}
+#boot{
+  background:
+    radial-gradient(ellipse at 76% 18%,rgba(213,46,64,.16),transparent 35%),
+    radial-gradient(ellipse at 15% 90%,rgba(65,103,157,.13),transparent 38%),
+    #101318
+}
+#boot:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,#d52e40 0 33%,#f4f1e9 33% 66%,#222 66%)}
+.boot-wrap{width:min(520px,calc(100% - 48px));position:relative}
+.boot-logo{
+  width:66px;height:74px;border-radius:17px;background:linear-gradient(145deg,#242b34,#151a20);
+  border:1px solid rgba(255,255,255,.15);color:white;box-shadow:0 14px 40px rgba(0,0,0,.3);
+  overflow:hidden
+}
+.sp-emblem{display:block;width:100%;height:100%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
+.boot-brand{gap:17px}
+.boot-brand b{font-size:14px;letter-spacing:.22em}
+.boot-brand small{color:#b0b3b8;letter-spacing:.17em}
+.boot-title{font-size:clamp(36px,7vw,62px);margin:62px 0 10px;letter-spacing:-.085em}
+.boot-title span{color:#e04453}
+.boot-sub{color:#b6bac0;letter-spacing:.17em;line-height:1.8}
+.boot-track{height:5px;background:#2a3039;border-radius:99px;margin-top:35px}
+.boot-track i{background:linear-gradient(90deg,#a91f31,#ed5963);box-shadow:0 0 18px rgba(213,46,64,.48)}
+.boot-row{color:#aeb3ba}
+#boot-status{color:#e0ddd5}
+.boot-foot{color:#737981;letter-spacing:.18em}
+#main-menu{
+  grid-template-columns:248px minmax(0,1fr);
+  background:
+    radial-gradient(ellipse at 76% 20%,rgba(116,148,190,.11),transparent 40%),
+    linear-gradient(110deg,rgba(13,16,21,.97),rgba(16,20,27,.92) 54%,rgba(13,17,23,.82));
+  backdrop-filter:blur(13px)
+}
+.menu-sidebar{background:rgba(11,14,19,.9);border-right:1px solid rgba(255,255,255,.1);padding:25px 18px 19px}
+.brand{padding:0 5px 27px;gap:12px}
+.brand-mark{
+  width:46px;height:52px;border-radius:12px;
+  display:grid;place-items:center;background:linear-gradient(145deg,#252b34,#15191f);
+  border:1px solid rgba(255,255,255,.16);overflow:hidden;flex:none
+}
+.brand-text b{font-size:11px;letter-spacing:.2em}
+.brand-text small{color:#a8adb4;letter-spacing:.14em}
+.menu-caption{color:#777e88;letter-spacing:.2em}
+.nav{gap:7px}
+.nav-btn{border-radius:9px;padding:13px 12px;color:#b5bac1;font-size:10px;border-left:2px solid transparent}
+.nav-btn .ico{color:#aab0b8}
+.nav-btn:hover{background:rgba(255,255,255,.055);color:#fff}
+.nav-btn.active{background:linear-gradient(90deg,rgba(213,46,64,.2),rgba(213,46,64,.045));border-color:rgba(213,46,64,.3);border-left-color:#dc3d4c;color:#fff}
+.nav-btn.active .ico{color:#ef5963}
+.sidebar-bottom{border-color:rgba(255,255,255,.11)}
+.connection{color:#c3c6ca}
+.dot{background:#dc3d4c;box-shadow:0 0 0 4px rgba(220,61,76,.16)}
+.sidebar-bottom p{color:#7f858d;line-height:1.7}
+.menu-main{padding:25px clamp(20px,4vw,60px) 38px}
+.menu-top{margin-bottom:32px}
+.location-chip{background:rgba(13,17,23,.72);border-color:rgba(255,255,255,.13);color:#e2e0da;border-radius:99px;padding:10px 15px}
+.location-chip i{background:#e04453;box-shadow:0 0 0 4px rgba(224,68,83,.15)}
+.quiet-btn{background:rgba(14,18,24,.75);border-color:rgba(255,255,255,.14);color:#d7d8d8;border-radius:99px;padding:10px 14px}
+.quiet-btn:hover{border-color:rgba(224,68,83,.55);color:#fff}
+.page-eyebrow{color:#e45561;letter-spacing:.23em}
+.page-title{font-size:clamp(34px,5.4vw,66px);letter-spacing:-.08em;color:#f4f1e9}
+.page-title span{color:#e04453}
+.page-desc{color:#b0b5bc;font-size:11px;line-height:1.85}
+.home-layout{grid-template-columns:minmax(0,1.45fr) minmax(250px,.55fr);gap:15px;margin-top:24px}
+.hero-panel{
+  min-height:370px;border:1px solid rgba(255,255,255,.15);border-radius:17px;
+  background:
+    radial-gradient(ellipse at 78% 23%,rgba(213,46,64,.24),transparent 35%),
+    linear-gradient(115deg,rgba(18,23,30,.98),rgba(28,35,45,.88) 60%,rgba(22,29,39,.75));
+  box-shadow:0 20px 55px rgba(0,0,0,.2)
+}
+.hero-panel:before{
+  background:
+    linear-gradient(90deg,#10151c 0%,rgba(16,21,28,.92) 38%,rgba(16,21,28,.1) 100%),
+    linear-gradient(0deg,rgba(9,13,18,.65),transparent 55%)
+}
+.hero-panel:after{
+  content:"";position:absolute;right:0;bottom:0;width:61%;height:83%;opacity:.48;pointer-events:none;
+  background:
+    linear-gradient(180deg,transparent 0 6%,#26323e 6% 100%);
+  clip-path:polygon(0 100%,0 67%,5% 67%,5% 41%,11% 41%,11% 59%,17% 59%,17% 28%,23% 28%,23% 53%,29% 53%,29% 15%,36% 15%,36% 62%,43% 62%,43% 37%,49% 37%,49% 57%,57% 57%,57% 23%,64% 23%,64% 68%,72% 68%,72% 43%,78% 43%,78% 64%,85% 64%,85% 31%,92% 31%,92% 58%,100% 58%,100% 100%);
+  border-top:2px solid rgba(213,46,64,.42)
+}
+.hero-copy{left:29px;bottom:28px;max-width:410px}
+.hero-kicker{color:#f06b75;font-size:8px;letter-spacing:.2em}
+.hero-copy h2{font-size:clamp(36px,4.6vw,56px);letter-spacing:-.085em}
+.hero-copy p{color:#c0c4c9;font-size:10px;max-width:340px}
+.primary-btn{background:linear-gradient(135deg,#d22b3d,#ed4858);color:#fff;border-radius:7px;padding:14px 18px;box-shadow:0 9px 25px rgba(196,36,54,.23)}
+.primary-btn:hover{box-shadow:0 13px 30px rgba(213,46,64,.35)}
+.secondary-btn{border:1px solid rgba(255,255,255,.24);background:rgba(8,12,18,.56);color:#f5f2ec;border-radius:7px}
+.side-stack{gap:12px}
+.info-tile{border:1px solid rgba(255,255,255,.13);border-radius:13px;background:linear-gradient(145deg,rgba(34,42,53,.9),rgba(17,22,29,.92));padding:19px}
+.info-tile:after{background:rgba(213,46,64,.09)}
+.tile-label{color:#a7adb5}
+.tile-value{font-size:21px;color:#f3f0e8}
+.tile-detail{color:#aab0b7;line-height:1.7}
+.car-select-grid{gap:12px;margin-top:19px}
+.car-card{border:1px solid rgba(255,255,255,.13);border-radius:13px;background:linear-gradient(155deg,#222a34,#151a21);padding:15px}
+.car-card:hover,.car-card.selected{border-color:rgba(224,68,83,.75);background:linear-gradient(155deg,#30232b,#171c23);transform:translateY(-2px)}
+.car-card.selected:after{background:#d52e40;color:#fff}
+.car-visual{height:94px;filter:drop-shadow(0 12px 12px rgba(0,0,0,.5))}
+.car-name{font-size:11px}
+.car-desc{color:#a8adb4}
+.car-tag{border-color:rgba(255,255,255,.14);color:#d6d5d0}
+.garage-card{border:1px solid rgba(255,255,255,.13);border-radius:14px;background:linear-gradient(155deg,#252d37,#151a21)}
+.garage-car{background:radial-gradient(ellipse at 50% 65%,rgba(213,46,64,.18),transparent 68%),#11161d}
+.garage-card p{color:#a9afb6}
+.garage-stat{background:rgba(255,255,255,.055)}
+.garage-stat small{color:#9299a2}
+.full-btn{border-color:rgba(224,68,83,.52);background:rgba(213,46,64,.1);color:#f0747e}
+.full-btn.active{background:#d52e40;color:#fff}
+.map-large,.map-side,.radio-console,.radio-config,.settings-card{border:1px solid rgba(255,255,255,.13);border-radius:14px;background:linear-gradient(150deg,#222a34,#151a21)}
+.map-large{overflow:hidden}
+.dest-btn{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.045)}
+.dest-btn:hover{border-color:rgba(224,68,83,.66)}
+.radio-big-art{background:radial-gradient(circle at 50% 50%,rgba(213,46,64,.22),transparent 48%),linear-gradient(135deg,#2b3542,#151a21);color:#e45561}
+.radio-control{background:#2b333d}
+.radio-control.play{background:#d52e40;color:white}
+.radio-config label,.setting-field label{color:#aeb4bc}
+.field{background:#11161d;border-color:rgba(255,255,255,.15);color:#f4f1e9}
+.field:focus{border-color:#e45561}
+.field option{background:#171c23}
+.small-btn{background:#d52e40;color:white;border-radius:7px}
+.settings-card h3{color:#f2eee6}
+.setting-row{border-color:rgba(255,255,255,.08)}
+.setting-row span{color:#d0d1d1}
+.setting-row small{color:#929aa3}
+.toggle{background:#39414c}
+.toggle.on{background:#cf3545}
+.toggle:after{background:#f4f1e9}
+.toggle.on:after{background:#fff}
+.control-row{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.11)}
+.control-row span{color:#c4c8cc}
+kbd{background:#2a333e;border-color:rgba(255,255,255,.17)}
+#game-ui .hud-card,#game-ui .hud-brand,#game-ui .hud-stat,#game-ui .speedometer,#game-ui .hud-btn{backdrop-filter:blur(10px);background:rgba(13,17,23,.88);border-color:rgba(255,255,255,.15)}
+.hud-brand i{background:#e04453}
+.hud-map-footer b{color:#f16b76}
+.hud-radio-toggle{background:#d52e40;color:#fff}
+.hud-btn.active{background:#d52e40;border-color:#d52e40;color:#fff}
+.radio-hud-icon{background:rgba(213,46,64,.18);color:#ed6470}
+#speed{color:#fff}
+#toast{background:rgba(15,19,25,.96);border:1px solid rgba(224,68,83,.35);color:#f5f1ea}
+#main-menu.hidden{backdrop-filter:none}
+button:focus-visible{outline:2px solid #ef5963;outline-offset:3px}
+@media(max-width:980px){
+  #main-menu{grid-template-columns:205px minmax(0,1fr)}
+  .home-layout{grid-template-columns:1fr}
+  .side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .hero-panel{min-height:340px}
+}
+@media(max-width:720px){
+  #main-menu{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .menu-sidebar{padding:10px 12px;border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}
+  .brand{padding:0 5px 9px}
+  .brand-mark{width:33px;height:38px}
+  .brand-text b{font-size:10px}
+  .brand-text small{font-size:7px}
+  .menu-caption,.sidebar-bottom{display:none}
+  .nav{display:flex;gap:5px;overflow-x:auto;padding-bottom:1px}
+  .nav-btn{white-space:nowrap;padding:8px 10px;font-size:9px;flex:none}
+  .nav-btn .ico{width:auto}
+  .menu-main{padding:13px 14px 28px}
+  .menu-top{margin-bottom:18px}
+  .location-chip{font-size:8px;padding:8px 10px}
+  .quiet-btn{font-size:8px;padding:8px 10px}
+  .home-layout{gap:10px}
+  .hero-panel{min-height:330px}
+  .hero-copy{left:19px;right:15px;bottom:20px}
+  .hero-copy h2{font-size:42px}
+  .side-stack{grid-template-columns:1fr 1fr}
+  .car-select-grid,.garage-grid{grid-template-columns:1fr}
+  .car-visual{height:70px}
+  .map-menu-layout,.radio-layout,.settings-layout{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1575,7 +1769,22 @@ kbd{
 
 <section id="boot">
   <div class="boot-wrap">
-    <div class="boot-brand"><div class="boot-logo">SD</div><div><b>SAMPA DRIVER</b><small>OPEN WORLD ROLEPLAY · BRASIL</small></div></div>
+    <div class="boot-brand"><div class="boot-logo"><svg class="sp-emblem" viewBox="0 0 112 128" role="img" aria-label="Brasão estilizado do Estado de São Paulo" xmlns="http://www.w3.org/2000/svg">
+<path d="M56 3 60 12 70 13 63 21 65 31 56 26 47 31 49 21 42 13 52 12Z" fill="#f2eee5" stroke="#b8bdc2" stroke-width="1.4"/>
+<g fill="none" stroke="#b88743" stroke-width="3.3" stroke-linecap="round">
+<path d="M25 95C13 79 13 54 25 39M25 58l-10-8m10 20L12 66m17-16 9-10m-13 27 11 3"/>
+<path d="M87 95c12-16 12-41 0-56M87 58l10-8M87 70l13-4M83 51l-9-10M85 77l-11 3"/>
+</g>
+<g fill="#a36e32"><circle cx="16" cy="49" r="3"/><circle cx="12" cy="66" r="3"/><circle cx="36" cy="42" r="3"/><circle cx="96" cy="50" r="3"/><circle cx="100" cy="66" r="3"/><circle cx="76" cy="42" r="3"/></g>
+<path d="M33 31h46l-3 43c-2 18-13 29-20 34C49 103 38 92 36 74Z" fill="#c9293b" stroke="#eeeae1" stroke-width="2.8"/>
+<path d="M56 41v44" stroke="#f4f1e9" stroke-width="3.8" stroke-linecap="round"/>
+<path d="M56 37 51 45h10Z" fill="#f4f1e9"/>
+<path d="M56 83l-5 8h10Z" fill="#d5d9dd"/>
+<text x="45" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+<text x="67" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">P</text>
+<path d="M20 105q36 12 72 0l-5 15H25Z" fill="#9e202e" stroke="#e9e2d7" stroke-width="1.5"/>
+<text x="56" y="115" fill="#fff" font-family="Arial,sans-serif" font-size="5.3" font-weight="bold" text-anchor="middle" letter-spacing=".25">PRO BRASILIA FIANT EXIMIA</text>
+</svg></div><div><b>SAMPA DRIVER</b><small>ROLEPLAY URBANO · SÃO PAULO</small></div></div>
     <div class="boot-title">SAMPA <span>DRIVER.</span></div>
     <div class="boot-sub">PREPARANDO SUA CIDADE, MOTOR E MAPA</div>
     <div class="boot-track"><i id="boot-progress"></i></div>
@@ -1586,7 +1795,22 @@ kbd{
 
 <section id="main-menu">
   <aside class="menu-sidebar">
-    <div class="brand"><div class="brand-mark">SD</div><div class="brand-text"><b>SAMPA DRIVER</b><small>SÃO PAULO ROLEPLAY</small></div></div>
+    <div class="brand"><div class="brand-mark"><svg class="sp-emblem" viewBox="0 0 112 128" role="img" aria-label="Brasão estilizado do Estado de São Paulo" xmlns="http://www.w3.org/2000/svg">
+<path d="M56 3 60 12 70 13 63 21 65 31 56 26 47 31 49 21 42 13 52 12Z" fill="#f2eee5" stroke="#b8bdc2" stroke-width="1.4"/>
+<g fill="none" stroke="#b88743" stroke-width="3.3" stroke-linecap="round">
+<path d="M25 95C13 79 13 54 25 39M25 58l-10-8m10 20L12 66m17-16 9-10m-13 27 11 3"/>
+<path d="M87 95c12-16 12-41 0-56M87 58l10-8M87 70l13-4M83 51l-9-10M85 77l-11 3"/>
+</g>
+<g fill="#a36e32"><circle cx="16" cy="49" r="3"/><circle cx="12" cy="66" r="3"/><circle cx="36" cy="42" r="3"/><circle cx="96" cy="50" r="3"/><circle cx="100" cy="66" r="3"/><circle cx="76" cy="42" r="3"/></g>
+<path d="M33 31h46l-3 43c-2 18-13 29-20 34C49 103 38 92 36 74Z" fill="#c9293b" stroke="#eeeae1" stroke-width="2.8"/>
+<path d="M56 41v44" stroke="#f4f1e9" stroke-width="3.8" stroke-linecap="round"/>
+<path d="M56 37 51 45h10Z" fill="#f4f1e9"/>
+<path d="M56 83l-5 8h10Z" fill="#d5d9dd"/>
+<text x="45" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+<text x="67" y="65" fill="#fff" font-family="Georgia,serif" font-size="16" font-weight="bold" text-anchor="middle">P</text>
+<path d="M20 105q36 12 72 0l-5 15H25Z" fill="#9e202e" stroke="#e9e2d7" stroke-width="1.5"/>
+<text x="56" y="115" fill="#fff" font-family="Arial,sans-serif" font-size="5.3" font-weight="bold" text-anchor="middle" letter-spacing=".25">PRO BRASILIA FIANT EXIMIA</text>
+</svg></div><div class="brand-text"><b>SAMPA DRIVER</b><small>ESTADO DE SÃO PAULO · BRASIL</small></div></div>
     <div class="menu-caption">MENU PRINCIPAL</div>
     <nav class="nav">
       <button class="nav-btn active" data-page="home"><span class="ico">⌂</span><span>Início</span></button>
@@ -1600,20 +1824,20 @@ kbd{
   </aside>
   <main class="menu-main">
     <div class="menu-top">
-      <div class="location-chip"><i></i><span>⌖ AVENIDA PAULISTA · SÃO PAULO, BR</span></div>
+      <div class="location-chip"><i></i><span>⌖ SÃO PAULO · BRASIL  /  23°33′S 46°38′W</span></div>
       <div class="menu-top-right"><button class="quiet-btn" id="quality-menu">GRÁFICOS · ALTO</button><button class="quiet-btn" id="menu-exit">FECHAR MENU ×</button></div>
     </div>
     <section class="menu-page active" id="page-home">
-      <div class="page-eyebrow">BEM-VINDO À CIDADE</div>
-      <h1 class="page-title">SEU ROLÊ.<br><span>SUA SÃO PAULO.</span></h1>
-      <p class="page-desc">Escolha seu carro, ligue o rádio e explore as ruas da capital. O cenário usa geometrias reais do OpenStreetMap, com prédios, vias, cruzamentos e pontos conhecidos da região.</p>
+      <div class="page-eyebrow">SÃO PAULO · A CIDADE EM MOVIMENTO</div>
+      <h1 class="page-title">SEU CAMINHO.<br><span>SUA SÃO PAULO.</span></h1>
+      <p class="page-desc">Escolha seu carro e explore a capital no seu ritmo. Ruas, edifícios e pontos conhecidos são montados a partir de dados cartográficos reais.</p>
       <div class="home-layout">
         <div class="hero-panel">
           <div class="hero-copy">
-            <div class="hero-kicker">MODO LIVRE · SEM LIMITES</div>
-            <h2>PEGUE A<br>ESTRADA.</h2>
-            <p>O motor está ligado. A cidade está aberta. Faça seu caminho pelo coração de São Paulo.</p>
-            <div class="hero-actions"><button class="primary-btn" id="start-driving">COMEÇAR A DIRIGIR ↗</button><button class="secondary-btn" id="home-garage">ESCOLHER CARRO</button></div>
+            <div class="hero-kicker">ROLEPLAY LIVRE  /  ESTADO DE SÃO PAULO</div>
+            <h2>A CIDADE<br>É SUA.</h2>
+            <p>Entre no fluxo da metrópole. Pegue a Paulista, atravesse bairros e descubra a cidade dirigindo.</p>
+            <div class="hero-actions"><button class="primary-btn" id="start-driving">ENTRAR NO MUNDO ↗</button><button class="secondary-btn" id="home-garage">ESCOLHER CARRO</button></div>
           </div>
         </div>
         <div class="side-stack">
@@ -1621,7 +1845,7 @@ kbd{
           <div class="info-tile"><div class="tile-label">EXPERIÊNCIA</div><div class="tile-value">ROLEPLAY LIVRE</div><div class="tile-detail">Câmera interna e externa, GPS, tráfego, rádio e ciclo de dia/noite.</div></div>
         </div>
       </div>
-      <div class="section-label" style="margin:23px 0 0;font-size:8px;letter-spacing:.17em;color:#92a5ac">SELEÇÃO RÁPIDA DE VEÍCULO</div>
+      <div class="section-label" style="margin:23px 0 0;font-size:8px;letter-spacing:.17em;color:#92a5ac">ESCOLHA SEU VEÍCULO  /  03 MODELOS</div>
       <div class="car-select-grid" id="home-car-grid"></div>
     </section>
 
@@ -1761,12 +1985,15 @@ kbd{
     }
   }
 ;
+  const DEVICE_MEMORY_GB=Number(navigator.deviceMemory||0);
+  const CPU_THREADS=Number(navigator.hardwareConcurrency||2);
+  const LOW_MEMORY_MODE=DEVICE_MEMORY_GB>0?DEVICE_MEMORY_GB<=4:CPU_THREADS<=4;
   const DEFAULTS={
-    quality:"high", shadows:true, distance:"high", weather:"clear", timeDynamic:true, hour:16, engine:true, sfx:.55, assist:true, save:true
+    quality:LOW_MEMORY_MODE?"medium":"high", shadows:!LOW_MEMORY_MODE, distance:LOW_MEMORY_MODE?"medium":"high", weather:"clear", timeDynamic:true, hour:16, engine:true, sfx:.55, assist:true, save:true
   }
 ;
   const state={
-    selected:"fusca", vehicle:"fusca", started:false, paused:false, firstPerson:false, headlights:false, hazard:false, speed:0, yaw:0, x:0, z:0, odometer:0, condition:100, gear:"N", timeMinutes:16*60, keys:Object.create(null), quality:"high", weather:"clear", settings:{
+    selected:"fusca", vehicle:"fusca", started:false, paused:false, firstPerson:false, headlights:false, hazard:false, speed:0, yaw:0, x:0, z:0, odometer:0, condition:100, gear:"N", timeMinutes:16*60, keys:Object.create(null), quality:LOW_MEMORY_MODE?"medium":"high", weather:"clear", settings:{
       ...DEFAULTS
     }
 , destination:null, roadPaths:[], blockers:[], trees:[], traffic:[], routeLine:null, playerMap:null, bigMap:null, miniMap:null, mapReady:false, worldReady:false, loading:false,
@@ -1775,7 +2002,7 @@ kbd{
   }
 ;
   let scene, camera, renderer, clock, carRoot, carBody, cityRoot, worldSun, engineContext, engineOsc, engineGain, engineFilter;
-  let buildingCount=0, roadCount=0, lastMapTick=0, lastLocation="AV. PAULISTA", lastAutosave=0, eventsBound=false;
+  let buildingCount=0, roadCount=0, lastMapTick=0, lastLocation="AV. PAULISTA", lastAutosave=0, eventsBound=false, lastRenderAt=0;
   const mats={
   }
 ;
@@ -1818,12 +2045,12 @@ kbd{
     camera.position.set(58, 54, 78);
     camera.lookAt(0, 0, 0);
     renderer=new THREE.WebGLRenderer({
-      antialias:true, alpha:false, powerPreference:"high-performance"
+      antialias:!LOW_MEMORY_MODE, alpha:false, powerPreference:"high-performance"
     }
     );
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.65));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, LOW_MEMORY_MODE?1:1.45));
     renderer.setSize(innerWidth, innerHeight);
-    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.enabled=!LOW_MEMORY_MODE;
     renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -1833,8 +2060,8 @@ kbd{
     scene.add(hemi);
     worldSun=new THREE.DirectionalLight(0xffebce, 2.3);
     worldSun.position.set(-170, 240, 100);
-    worldSun.castShadow=true;
-    worldSun.shadow.mapSize.set(1536, 1536);
+    worldSun.castShadow=!LOW_MEMORY_MODE;
+    worldSun.shadow.mapSize.set(LOW_MEMORY_MODE?512:1024, LOW_MEMORY_MODE?512:1024);
     worldSun.shadow.camera.left=-270;
     worldSun.shadow.camera.right=270;
     worldSun.shadow.camera.top=270;
@@ -2136,7 +2363,7 @@ function rand(min, max){
     const sidewalkGeo=new THREE.BufferGeometry();sidewalkGeo.setAttribute("position",new THREE.Float32BufferAttribute(sidewalkVertices,3));sidewalkGeo.computeVertexNormals();
     const sidewalkMesh=new THREE.Mesh(sidewalkGeo,sideSurface);sidewalkMesh.receiveShadow=true;cityRoot.add(sidewalkMesh);
     let accepted=0;
-    for(const el of buildingElements){if(accepted>=2500)break;if(buildBuilding(el,buildingMaterials,buildingBatches,details))accepted++}
+    for(const el of buildingElements){if(accepted>=(LOW_MEMORY_MODE?520:1650))break;if(buildBuilding(el,buildingMaterials,buildingBatches,details))accepted++}
     for(let i=0;i<buildingBatches.length;i++){
       if(!buildingBatches[i].length)continue;
       const geometry=new THREE.BufferGeometry();geometry.setAttribute("position",new THREE.Float32BufferAttribute(buildingBatches[i],3));geometry.computeVertexNormals();
@@ -2150,8 +2377,8 @@ function rand(min, max){
       roof.castShadow=true;roof.receiveShadow=true;cityRoot.add(roof);
     }
     drawFacadeInstances(details);
-    for(const el of poiElements){const p=osmPoint(el);if(!p)continue;const pos=worldPoint(p.lat,p.lon);createPlaceLabel(el.tags.name,el.tags.shop||el.tags.amenity||el.tags.tourism||el.tags.leisure||el.tags.office,pos.x,pos.z,5,"poi/"+el.type+"/"+el.id)}
-    createRealTrees(treeElements);createRealStreetLamps(lampElements);
+    for(const el of poiElements.slice(0,LOW_MEMORY_MODE?90:240)){const p=osmPoint(el);if(!p)continue;const pos=worldPoint(p.lat,p.lon);createPlaceLabel(el.tags.name,el.tags.shop||el.tags.amenity||el.tags.tourism||el.tags.leisure||el.tags.office,pos.x,pos.z,5,"poi/"+el.type+"/"+el.id)}
+    createRealTrees(treeElements.slice(0,LOW_MEMORY_MODE?110:420));createRealStreetLamps(lampElements.slice(0,LOW_MEMORY_MODE?70:220));
     buildingCount+=accepted;roadCount+=roadElements.length;
     createTraffic(state.roadPaths.slice(firstRoadIndex));
     const spawn=append?null:nearestRoad({x:0,z:0});if(spawn&&!state.started){state.x=spawn.x;state.z=spawn.z}
@@ -2182,7 +2409,7 @@ function nearestRoad(point){
   }
 function createTraffic(paths=state.roadPaths){
     const usable=paths.filter(p=>p.length>5&&p.length<180);
-    for(let i=0;i<Math.min(18,usable.length);i++){
+    for(let i=0;i<Math.min(LOW_MEMORY_MODE?5:12,usable.length);i++){
       const path=usable[i],group=new THREE.Group();
       const color=[0x9b3d33,0xd8d7cb,0x3e5566,0x8c967d,0x222a2d,0xb39a73,0x566b5d][(i+state.traffic.length)%7];
       const body=new THREE.Mesh(new THREE.BoxGeometry(1.72,.72,3.35),material(color,.5,.12));body.position.y=.77;body.castShadow=true;group.add(body);
@@ -2495,7 +2722,7 @@ function createVehicle(type){
       'node["highway"="street_lamp"](around:'+radius+','+lat+','+lon+');'+
       ');out center geom;';
   }
-  async function loadCityChunk(tx,tz,radius=1150){
+  async function loadCityChunk(tx,tz,radius=LOW_MEMORY_MODE?850:1150){
     const key=tx+":"+tz;
     if(state.loadedChunks.has(key)||state.loadingChunks.has(key))return false;
     const retryAt=state.chunkRetry.get(key)||0;
@@ -2546,7 +2773,7 @@ function createVehicle(type){
   }
   async function fetchOSM(){
     const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400);
-    const ok=await loadCityChunk(tx,tz,1650);
+    const ok=await loadCityChunk(tx,tz,LOW_MEMORY_MODE?1050:1650);
     if(!ok){
       $("connection-label").textContent="OPENSTREETMAP INDISPONÍVEL";
       toast("Sem resposta do mapa real. Nenhum prédio fictício será criado.");
@@ -2556,7 +2783,7 @@ function createVehicle(type){
     }
   }
   function ensureCityCoverage(){
-    if(!state.started||state.paused||Date.now()-state.chunkCheckAt<3500)return;
+    if(!state.started||state.paused||Date.now()-state.chunkCheckAt<(LOW_MEMORY_MODE?5200:3500))return;
     state.chunkCheckAt=Date.now();
     const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400),key=tx+":"+tz;
     if(!state.loadedChunks.has(key)&&!state.loadingChunks.has(key)){
@@ -2670,10 +2897,11 @@ function createVehicle(type){
   }
   function applyQuality(value){
     state.quality=value;
-    const ratio=value==="high"?1.65:value==="medium"?1.15:.78;
+    const ratio=value==="high"?(LOW_MEMORY_MODE?1.18:1.65):value==="medium"?(LOW_MEMORY_MODE?1:1.15):.78;
     if(renderer){
       renderer.setPixelRatio(Math.min(devicePixelRatio, ratio));
       renderer.shadowMap.enabled=state.settings.shadows&&value!=="low";
+      worldSun.castShadow=state.settings.shadows&&value!=="low";
     }
     if(scene)scene.fog.far=state.settings.distance==="low"?530:state.settings.distance==="medium"?950:1500;
     $("quality-select").value=value;
@@ -2776,7 +3004,13 @@ function createVehicle(type){
     if(state.started&&!state.paused)updateTraffic(dt);
     updateWorldTime(dt);
     updateCamera(dt);
-    if(renderer)renderer.render(scene, camera);
+    if(renderer){
+      const now=performance.now();
+      if(!LOW_MEMORY_MODE||now-lastRenderAt>=24){
+        renderer.render(scene, camera);
+        lastRenderAt=now;
+      }
+    }
   }
   function keyOf(e){
     return e.key.toLowerCase()===" "?"space":e.key.toLowerCase()
@@ -3090,7 +3324,8 @@ function createVehicle(type){
     }
     );
     bindToggle("shadow-toggle", "shadows", v=>{
-      renderer.shadowMap.enabled=v&&state.quality!=="low"
+      renderer.shadowMap.enabled=v&&state.quality!=="low";
+      worldSun.castShadow=v&&state.quality!=="low"
     }
     );
     bindToggle("time-toggle", "timeDynamic");
@@ -3224,6 +3459,12 @@ function createVehicle(type){
   async function boot(){
     setBoot(5, "Verificando os recursos gráficos…");
     loadState();
+    if(LOW_MEMORY_MODE){
+      state.quality="medium";
+      state.settings.quality="medium";
+      state.settings.shadows=false;
+      state.settings.distance="medium";
+    }
     await ensureLibraries();
     setBoot(15, "Inicializando renderizador WebGL…");
     setupEvents();
@@ -3241,7 +3482,7 @@ function createVehicle(type){
     if(state.miniMap)setTimeout(()=>state.miniMap.invalidateSize(), 120);
     await new Promise(resolve=>setTimeout(resolve, 260));
     setBoot(100, "Tudo pronto. Boa viagem!");
-    $("connection-label").textContent="CENÁRIO LOCAL PRONTO";
+    $("connection-label").textContent="SÃO PAULO · PRONTO PARA EXPLORAR";
     $("boot").classList.add("hide");
     toast("Menu pronto. O mapa real continua carregando em segundo plano.");
     fetchOSM().then(()=>{
