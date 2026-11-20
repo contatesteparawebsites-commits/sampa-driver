@@ -1950,13 +1950,17 @@ function rand(min, max){
     const w=maxX-minX,d=maxZ-minZ,area=w*d;
     if(w<2||d<2||w>280||d>280||area<12)return null;
     const style=buildingStyle(tags,area);
-    let height=parseFloat(tags.height);
+    const roofShape=String(tags["roof:shape"]||((style===0&&w<36&&d<36)?"gabled":"flat")).toLowerCase();
     const levels=parseFloat(tags["building:levels"]);
+    const mappedHeight=parseFloat(tags.height);
+    const rawRoofHeight=parseFloat(tags["roof:height"]);
+    const pitchedRoof=["gabled","saltbox","half-hipped","pyramidal","hipped"].includes(roofShape)&&w<70&&d<70;
+    const inferredRoofHeight=pitchedRoof?Math.max(1.1,Math.min(4,Math.min(w,d)*.2)):0;
+    const roofHeight=Number.isFinite(rawRoofHeight)&&rawRoofHeight>0?rawRoofHeight:inferredRoofHeight;
     const estimatedFloors=({0:1,1:4,2:5,3:2,4:1,5:2})[style]||2;
-    if(!Number.isFinite(height)||height<=0)height=(Number.isFinite(levels)&&levels>0?levels:estimatedFloors)*3.05;
+    let height=Number.isFinite(mappedHeight)&&mappedHeight>0?mappedHeight:(Number.isFinite(levels)&&levels>0?levels:estimatedFloors)*3.05+roofHeight;
     height=Math.max(2.8,Math.min(190,height));
     const minHeight=Math.max(0,Math.min(height-1,parseFloat(tags.min_height)||0));
-    const roofHeight=Math.max(0,Math.min(height-minHeight-.5,parseFloat(tags["roof:height"])||0));
     const wallHeight=Math.max(1,height-minHeight-roofHeight);
     const geometry=new THREE.ExtrudeGeometry(shapeFromPoints(ring),{depth:wallHeight,bevelEnabled:false,curveSegments:1,steps:1});
     geometry.rotateX(Math.PI/2);geometry.translate(0,wallHeight+minHeight,0);geometry.computeVertexNormals();
@@ -1964,27 +1968,27 @@ function rand(min, max){
     for(let i=0;i<positions.length;i++)batch.push(positions[i]);
     const floorHeight=style===0?2.75:3.05,floors=Math.max(1,Math.min(45,Math.floor(wallHeight/floorHeight)));
     const spacing=style===0?3.4:style===3?4.1:4.5;
+    const windowBase=style===0?.65:1.25,windowHeight=style===0?1.0:1.27;
     for(let edge=0;edge<ring.length&&details.windows.length<15000;edge++){
       const a=ring[edge],b=ring[(edge+1)%ring.length],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
       if(len<4)continue;
       const count=Math.min(18,Math.floor(len/spacing));if(!count)continue;
       const nx=-dz/len,nz=dx/len,angle=Math.atan2(-dz,dx);
       for(let row=0;row<floors;row++){
-        const y=minHeight+1.25+row*floorHeight;if(y+1.4>minHeight+wallHeight-.3)continue;
+        const y=minHeight+windowBase+row*floorHeight;if(y+windowHeight>minHeight+wallHeight-.3)continue;
         for(let col=0;col<count;col++){
           const t=(col+1)/(count+1),x=a.x+dx*t+nx*.075,z=a.z+dz*t+nz*.075;
           const width=style===0?Math.min(1.05,len/(count+1)*.45):1.22;
-          details.frames.push({x,y:y+.12,z,angle,width:width+.19,height:1.48});
-          details.windows.push({x,y:y+.12,z,angle,width,height:1.27});
+          details.frames.push({x,y:y+.12,z,angle,width:width+.19,height:windowHeight+.22});
+          details.windows.push({x,y:y+.12,z,angle,width,height:windowHeight});
           if(style===1&&row>0&&col%2===0&&details.balconies.length<5000)details.balconies.push({x:x+nx*.18,y:y-.48,z:z+nz*.18,angle,width:Math.min(1.9,width+.5)});
         }
       }
     }
-    const roofShape=String(tags["roof:shape"]||((style===0&&w<36&&d<36&&height<15)?"gabled":"flat")).toLowerCase();
     if(["gabled","saltbox","half-hipped"].includes(roofShape)&&w<70&&d<70){
-      createGableRoof(minX-.25,maxX+.25,minZ-.25,maxZ+.25,height-roofHeight,roofHeight||Math.max(1.1,Math.min(4,Math.min(w,d)*.2)),roofColor(tags,style),details.roofs);
+      createGableRoof(minX-.25,maxX+.25,minZ-.25,maxZ+.25,height-roofHeight,roofHeight,roofColor(tags,style),details.roofs);
     }else if(roofShape==="pyramidal"||roofShape==="hipped"){
-      const roofRise=roofHeight||Math.max(1.4,Math.min(w,d)*.22);
+      const roofRise=roofHeight;
       const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.72,roofRise,4),new THREE.MeshStandardMaterial({color:roofColor(tags,style),roughness:.95}));
       roof.position.set((minX+maxX)/2,height+roofRise*.5,(minZ+maxZ)/2);roof.rotation.y=Math.PI/4;cityRoot.add(roof);
     }else{
