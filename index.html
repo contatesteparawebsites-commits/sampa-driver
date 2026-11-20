@@ -413,6 +413,7 @@ function initRenderer(){
  scene.background=new THREE.Color(0x9db7c1);
  scene.fog=new THREE.Fog(0x9db7c1,280,1500);
  camera=new THREE.PerspectiveCamera(67,innerWidth/innerHeight,.1,2400);
+ camera.position.set(58,54,78);camera.lookAt(0,0,0);
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
  renderer.setPixelRatio(Math.min(devicePixelRatio,1.65));
  renderer.setSize(innerWidth,innerHeight);
@@ -875,7 +876,7 @@ function initAudio(){
   engineFilter=engineContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=380;
   engineGain=engineContext.createGain();engineGain.gain.value=.0001;
   engineOsc.connect(engineFilter);engineFilter.connect(engineGain);engineGain.connect(engineContext.destination);engineOsc.start();
-  state.radioAudio.preload="none";
+  state.radioAudio.preload="none";state.radioAudio.volume=.72;
   state.radioAudio.addEventListener("ended",()=>{if(state.radioQueue.length)nextRadio()});
   state.radioAudio.addEventListener("error",()=>{setRadioText("Falha ao reproduzir","Verifique o link ou a instância");toast("Não foi possível abrir o áudio")});
  }catch(e){console.warn("Audio:",e)}
@@ -978,6 +979,7 @@ function updateDriving(dt){
 }
 function updateCamera(dt){
  if(!carRoot)return;
+ if(!state.started){const overview=new THREE.Vector3(58,54,78);camera.position.lerp(overview,1-Math.pow(.02,dt));camera.lookAt(0,0,0);return;}
  carRoot.position.set(state.x,0,state.z);carBody.rotation.y=state.yaw;
  carBody.userData.wheels.forEach(w=>w.rotation.x-=state.speed*dt*1.4);
  if(state.firstPerson){
