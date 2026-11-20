@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#06090c">
+<meta name="description" content="SAMPA DRIVER — roleplay de carro em mundo aberto em São Paulo. Fusca, Uno e Jipe, mapa 3D do OpenStreetMap, GPS e rádio.">
+<title>SAMPA DRIVER — Roleplay de carro em São Paulo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+
+<svg id="icon-sprite" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v5.8M4.2 16.5l5-2.9M19.8 16.5l-5-2.9"/></symbol>
+  <symbol id="i-garage" viewBox="0 0 24 24"><path d="M3 20V9.5L12 4l9 5.5V20"/><path d="M7 20v-6h10v6"/><path d="M7 17h10"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="16" cy="14" r="3"/><path d="M7 12h4M7 16h4M17 8V4"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h9M17 17h3"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></symbol>
+  <symbol id="i-keys" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M8 14h8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5 19 12 7 19.5Z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M6 5l10 7-10 7Z"/><path d="M18 5v14"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M18 5 8 12l10 7Z"/><path d="M6 5v14"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 8h3l1.6-2h8.8L18 8h3v11H3Z"/><circle cx="12" cy="13" r="3.6"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3Z"/></symbol>
+  <symbol id="i-horn" viewBox="0 0 24 24"><path d="M3 10v4h3l6 4V6L6 10H3Z"/><path d="M16 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"/></symbol>
+  <symbol id="i-hazard" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M12 3v18M12 3l-6 6M12 3l6 6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9h3l5-4v14l-5-4H4Z"/><path d="M16 8a5 5 0 0 1 0 8"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></symbol>
+  <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 16a4.5 4.5 0 0 1 .4-9A5.5 5.5 0 0 1 18 8.5 3.5 3.5 0 0 1 17.5 16Z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 17a4.5 4.5 0 0 1 .4-9A5.5 5.5 0 0 1 18 9.5 3.5 3.5 0 0 1 17.5 17Z"/></symbol>
+  <symbol id="i-fog" viewBox="0 0 24 24"><path d="M4 9h16M2 13h18M5 17h14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 6l1.5-2h5L16 6"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 2.4 8.3"/><path d="M4 4v6h6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+</svg>
+
+<div id="world"><canvas id="scene"></canvas></div>
+<div id="atmos"></div>
+<div id="rain-layer"></div>
+<div id="light-flash"></div>
+
+<!-- ================= BOOT ================= -->
+<section id="boot" aria-label="Carregando o jogo">
+  <div class="boot-grid"></div>
+  <div class="boot-card">
+    <div class="boot-top">
+      <div class="boot-mark">SD</div>
+      <div class="boot-id">
+        <b>SAMPA DRIVER</b>
+        <small>OPEN WORLD ROLEPLAY · SÃO PAULO / BR</small>
+      </div>
+      <div class="boot-build" id="boot-build">BUILD 3.0</div>
+    </div>
+    <h1 class="boot-title">SAMPA<br><span>DRIVER.</span></h1>
+    <p class="boot-tag">Dirija São Paulo como ela é. Três carros, ruas reais, GPS na cabine e rádio no volume certo.</p>
+    <div class="boot-bar"><i id="boot-fill"></i></div>
+    <div class="boot-row">
+      <span id="boot-status">Iniciando…</span>
+      <b id="boot-percent">0%</b>
+    </div>
+    <div class="boot-foot"><span>OPENSTREETMAP · THREE.JS</span><span id="boot-net">REDE · VERIFICANDO</span></div>
+  </div>
+</section>
+
+<!-- ================= MENU ================= -->
+<div id="app" class="app" aria-hidden="false">
+  <aside class="rail">
+    <button class="rail-logo" data-page="home" title="SAMPA DRIVER">
+      <span>SD</span>
+    </button>
+    <nav class="rail-nav">
+      <button class="rail-btn active" data-page="home"><svg class="ico"><use href="#i-wheel"/></svg><span>Início</span></button>
+      <button class="rail-btn" data-page="garage"><svg class="ico"><use href="#i-garage"/></svg><span>Garagem</span></button>
+      <button class="rail-btn" data-page="map"><svg class="ico"><use href="#i-map"/></svg><span>Mapa</span></button>
+      <button class="rail-btn" data-page="radio"><svg class="ico"><use href="#i-radio"/></svg><span>Rádio</span></button>
+      <button class="rail-btn" data-page="settings"><svg class="ico"><use href="#i-sliders"/></svg><span>Ajustes</span></button>
+      <button class="rail-btn" data-page="controls"><svg class="ico"><use href="#i-keys"/></svg><span>Controles</span></button>
+    </nav>
+    <div class="rail-foot">
+      <button class="rail-mini" id="btn-fullscreen" title="Tela cheia"><svg class="ico"><use href="#i-expand"/></svg></button>
+      <button class="rail-mini" id="btn-sound" title="Ligar/desligar som"><svg class="ico"><use href="#i-volume"/></svg></button>
+      <span class="rail-version">v3.0</span>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <header class="topbar">
+      <div class="chip">
+        <i class="dot-live"></i>
+        <span id="topbar-district">AV. PAULISTA · SÃO PAULO, BR</span>
+      </div>
+      <div class="topbar-right">
+        <div class="chip chip-quiet" id="topbar-weather-pill"><svg class="ico sm"><use href="#i-sun"/></svg><span id="topbar-weather">ENSOLARADO · 24°C</span></div>
+        <div class="chip chip-quiet"><svg class="ico sm"><use href="#i-clock"/></svg><span id="topbar-time">16:00</span></div>
+        <div class="chip chip-net" id="topbar-net"><i></i><span>OSM · OFFLINE</span></div>
+        <button class="ghost-btn" id="btn-quit-menu">FECHAR ×</button>
+      </div>
+    </header>
+
+    <!-- ---------- HOME ---------- -->
+    <section class="page active" id="page-home">
+      <div class="home-grid">
+        <div class="hero" id="hero-mount">
+          <div class="hero-glow"></div>
+          <div class="hero-copy">
+            <div class="eyebrow">MODO LIVRE · SEM MISSÃO OBRIGATÓRIA</div>
+            <h1 class="display">O ROLÊ<br><span>É SEU.</span></h1>
+            <p class="lede">A cidade é real, o tanque está cheio e o rádio está esperando. Pegue o Fusca azul, o Uno com escada no teto ou o Jipe verde e vá.</p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" id="btn-play"><svg class="ico"><use href="#i-play"/></svg>DIRIGIR AGORA</button>
+              <button class="btn btn-ghost" data-page="garage"><svg class="ico"><use href="#i-garage"/></svg>TROCAR CARRO</button>
+            </div>
+            <div class="hero-stats">
+              <div><small>CARRO ATUAL</small><b id="home-car-name">Fusca Noturno</b></div>
+              <div><small>CÂMERA</small><b id="home-cam-label">3ª pessoa</b></div>
+              <div><small>REGIÃO</small><b id="home-region">Paulista</b></div>
+            </div>
+          </div>
+          <div class="hero-stage" id="showroom-hero"></div>
+          <div class="hero-badge" id="hero-badge">0 KM</div>
+        </div>
+
+        <div class="home-side">
+          <div class="tile tile-route">
+            <div class="tile-head"><span>GPS DA CIDADE</span><svg class="ico sm"><use href="#i-pin"/></svg></div>
+            <b id="home-dest">Nenhum destino</b>
+            <small id="home-dest-sub">Escolha um ponto turístico no mapa para traçar a rota.</small>
+            <button class="mini-btn" data-page="map">ABRIR MAPA</button>
+          </div>
+          <div class="tile tile-radio-mini">
+            <div class="tile-head"><span>RÁDIO DO CARRO</span><svg class="ico sm"><use href="#i-radio"/></svg></div>
+            <div class="mini-eq" id="home-eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <b id="home-radio-title">Desligado</b>
+            <small id="home-radio-sub">Cole uma playlist do YouTube ou Piped</small>
+            <button class="mini-btn" id="home-radio-open" data-page="radio">ABRIR RÁDIO</button>
+          </div>
+          <div class="tile tile-cars">
+            <div class="tile-head"><span>SUA GARAGEM</span><span class="tag-mini">3</span></div>
+            <div class="quick-cars" id="quick-cars"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip">
+        <div class="strip-item"><small>RUAS CARREGADAS</small><b id="stat-roads">—</b></div>
+        <div class="strip-item"><small>EDIFÍCIOS</small><b id="stat-buildings">—</b></div>
+        <div class="strip-item"><small>DISTRITO</small><b id="stat-district">Paulista</b></div>
+        <div class="strip-item"><small>HORA</small><b id="stat-clock">16:00</b></div>
+        <div class="strip-item"><small>ODÔMETRO</small><b id="stat-odo">0.0 KM</b></div>
+      </div>
+    </section>
+
+    <!-- ---------- GARAGE ---------- -->
+    <section class="page" id="page-garage">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">COLECÇÃO DE RUA</div>
+          <h2 class="display sm">SUA<br><span>GARAGEM.</span></h2>
+        </div>
+        <p class="page-note">Três projetos diferentes para a mesma cidade. Clique no carro para ver os detalhes, depois caia na rua.</p>
+      </div>
+      <div class="garage-grid">
+        <div class="garage-stage" id="showroom-garage">
+          <div class="stage-grid"></div>
+          <div class="stage-tag" id="garage-tag">FUSCA · AZUL NOTURNO</div>
+          <div class="stage-hint">arraste para girar</div>
+        </div>
+        <div class="garage-info">
+          <div class="car-head">
+            <div>
+              <div class="eyebrow" id="garage-eyebrow">CLÁSSICO NACIONAL</div>
+              <h3 id="garage-name">Fusca Noturno</h3>
+            </div>
+            <div class="paint-dot" id="garage-paint"></div>
+          </div>
+          <p id="garage-desc">O clássico azul-escuro. Motor boxer 1.3 refrigerado a ar, som de besouro e um charme que atravessa gerações.</p>
+          <div class="spec-list">
+            <div class="spec"><span>Velocidade máx.</span><b id="spec-speed">128</b><i><u style="width:52%"></u></i></div>
+            <div class="spec"><span>Aceleração</span><b id="spec-accel">62</b><i><u style="width:62%"></u></i></div>
+            <div class="spec"><span>Curva</span><b id="spec-grip">70</b><i><u style="width:70%"></u></i></div>
+            <div class="spec"><span>Peso</span><b id="spec-weight">890 kg</b><i><u style="width:40%"></u></i></div>
+          </div>
+          <div class="spec-extra">
+            <div><small>MOTOR</small><b id="spec-engine">1.3 BOXER</b></div>
+            <div><small>TRAÇÃO</small><b id="spec-drive">TRASEIRA</b></div>
+            <div><small>CÂMBIO</small><b id="spec-gears">4 MARCHAS</b></div>
+          </div>
+          <div class="garage-actions">
+            <button class="btn btn-primary" id="btn-drive-selected"><svg class="ico"><use href="#i-wheel"/></svg>DIRIGIR ESTE</button>
+            <button class="btn btn-ghost" id="btn-horn-preview"><svg class="ico"><use href="#i-horn"/></svg>BUZINA</button>
+          </div>
+        </div>
+      </div>
+      <div class="car-cards" id="garage-cards"></div>
+    </section>
+
+    <!-- ---------- MAP ---------- -->
+    <section class="page" id="page-map">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">NAVEGAÇÃO · OPENSTREETMAP</div>
+          <h2 class="display sm">MAPA DA<br><span>CIDADE.</span></h2>
+        </div>
+        <div class="map-tools">
+          <div class="seg" id="district-seg"></div>
+          <button class="ghost-btn" id="btn-reload-city"><svg class="ico"><use href="#i-reset"/></svg>RECARREGAR</button>
+        </div>
+      </div>
+      <div class="map-grid">
+        <div class="map-box">
+          <canvas id="bigmap"></canvas>
+          <div class="map-overlay">
+            <div class="map-compass" id="bigmap-compass">N</div>
+            <div class="map-zoom">
+              <button id="bigmap-zoom-in">+</button>
+              <button id="bigmap-zoom-out">−</button>
+              <button id="bigmap-center" title="Centralizar no carro"><svg class="ico sm"><use href="#i-pin"/></svg></button>
+            </div>
+            <div class="map-scale" id="bigmap-scale">500 m</div>
+            <div class="map-attrib">© OpenStreetMap contributors</div>
+          </div>
+          <div class="map-loader" id="map-loader"><i></i><span id="map-loader-text">Carregando ruas reais…</span></div>
+        </div>
+        <div class="map-side">
+          <div class="side-block">
+            <div class="tile-head"><span>DESTINOS</span><span class="tag-mini" id="dest-count">0</span></div>
+            <div class="dest-list" id="dest-list"></div>
+          </div>
+          <div class="side-block route-block">
+            <div class="tile-head"><span>ROTA ATIVA</span><b class="mono" id="route-dist">—</b></div>
+            <p id="route-summary">Nenhuma rota traçada. Escolha um destino acima para o GPS guiar você pela cidade.</p>
+            <div class="route-meta">
+              <div><small>DISTÂNCIA</small><b id="route-km">—</b></div>
+              <div><small>TEMPO</small><b id="route-eta">—</b></div>
+              <div><small>POSIÇÃO</small><b id="route-coord">—</b></div>
+            </div>
+            <button class="mini-btn" id="btn-route-clear">LIMPAR ROTA</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- RADIO ---------- -->
+    <section class="page" id="page-radio">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">SOM NA CABINE</div>
+          <h2 class="display sm">SINTONIZE<br><span>O ROLÊ.</span></h2>
+        </div>
+        <p class="page-note">Cole o link de uma playlist do YouTube (toca só o áudio, player escondido), de uma instância Piped ou de um stream de áudio direto.</p>
+      </div>
+      <div class="radio-grid">
+        <div class="radio-player">
+          <canvas id="radio-viz"></canvas>
+          <div class="radio-cover" id="radio-cover"><svg class="ico"><use href="#i-radio"/></svg></div>
+          <div class="radio-title">
+            <div class="eyebrow" id="radio-source-label">SAMPA FM · PLAYER PESSOAL</div>
+            <h3 id="radio-title">Nada tocando</h3>
+            <p id="radio-sub">Conecte uma playlist para começar</p>
+          </div>
+          <div class="radio-transport">
+            <button class="round-btn" id="radio-prev" title="Faixa anterior"><svg class="ico"><use href="#i-prev"/></svg></button>
+            <button class="round-btn play" id="radio-play" title="Tocar / pausar"><svg class="ico"><use href="#i-play"/></svg></button>
+            <button class="round-btn" id="radio-next" title="Próxima faixa"><svg class="ico"><use href="#i-next"/></svg></button>
+          </div>
+          <div class="radio-vol">
+            <svg class="ico sm"><use href="#i-volume"/></svg>
+            <input id="radio-volume" type="range" min="0" max="100" value="72" aria-label="Volume da rádio">
+            <b class="mono" id="radio-volume-label">72</b>
+          </div>
+        </div>
+        <div class="radio-config">
+          <div class="tabs" id="radio-tabs">
+            <button class="tab active" data-src="youtube">YouTube</button>
+            <button class="tab" data-src="piped">Piped</button>
+            <button class="tab" data-src="direct">Link direto</button>
+          </div>
+          <label for="radio-url" id="radio-url-label">LINK DA PLAYLIST DO YOUTUBE</label>
+          <div class="input-row">
+            <input id="radio-url" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://www.youtube.com/playlist?list=…">
+            <button class="btn btn-primary sm" id="radio-connect">CONECTAR</button>
+          </div>
+          <div class="radio-hint" id="radio-hint">O player do YouTube fica escondido e o áudio toca dentro do jogo. A primeira faixa só começa depois de um clique (política dos navegadores).</div>
+          <div class="radio-presets">
+            <button class="preset" data-preset="direct" data-url="https://stream.zeno.fm/8wv4d0g5uf9uv">Rádio Zeno</button>
+            <button class="preset" data-preset="direct" data-url="https://ice1.somafm.com/groovesalad-128-mp3">SomaFM Groove</button>
+            <button class="preset" data-preset="youtube" data-url="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi 24/7</button>
+          </div>
+          <div class="radio-status" id="radio-status"><i></i><span>Pronto</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- SETTINGS ---------- -->
+    <section class="page" id="page-settings">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">PERSONALIZE A EXPERIÊNCIA</div>
+          <h2 class="display sm">AJUSTE<br><span>TUDO.</span></h2>
+        </div>
+        <p class="page-note">Gráficos, clima, áudio e direção. Tudo salvo no seu navegador — o próximo rolê começa exatamente daqui.</p>
+      </div>
+      <div class="settings-grid">
+        <div class="card">
+          <div class="card-title"><svg class="ico sm"><use href="#i-camera"/></svg>GRÁFICOS</div>
+          <div class="row"><div><span>Qualidade geral</span><small>Resolução, sombras e detalhes</small></div>
+            <select class="select" id="set-quality"><option value="high">Alta</option><option value="balanced">Equilibrada</option><option value="low">Baixa</option></select></div>
+          <div class="row"><div><span>Sombras dinâmicas</span><small>Sombras do carro e prédios</small></div><button class="switch on" id="set-shadows" aria-label="Sombras"></button></div>
+          <div class="row"><div><span>Distância de visão</span><small>Névoa e alcance da cidade</small></div>
+            <select class="select" id="set-view"><option value="far">Longa</option><option value="mid">Média</option><option value="near">Curta</option></select></div>
+          <div class="row"><div><span>Tráfego</span><small>Carros circulando na cidade</small></div>
+            <select class="select" id="set-traffic"><option value="high">Intenso</option><option value="mid">Normal</option><option value="low">Tranquilo</option></select></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><svg class="ico sm"><use href="#i-cloud"/></svg>CIDADE E CLIMA</div>
+          <div class="row"><div><span>Clima</span><small>Atmosfera e partículas</small></div>
+            <select class="select" id="set-weather"><option value="clear">Ensolarado</option><option value="cloudy">Nublado</option><option value="rain">Chuva</option><option value="fog">Neblina</option></select></div>
+          <div class="row"><div><span>Ciclo dia/noite</span><small>O tempo passa enquanto dirige</small></div><button class="switch on" id="set-timelapse" aria-label="Ciclo de tempo"></button></div>
+          <div class="row"><div><span>Hora do dia</span><small>Ponto de partida</small></div>
+            <select class="select" id="set-hour"><option value="6">06:00</option><option value="9">09:00</option><option value="12">12:00</option><option value="16" selected>16:00</option><option value="18.5">18:30</option><option value="21">21:00</option><option value="23.5">23:30</option></select></div>
+          <div class="row"><div><span>Faróis automáticos</span><small>Acendem quando escurece</small></div><button class="switch on" id="set-autolight" aria-label="Faróis automáticos"></button></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><svg class="ico sm"><use href="#i-volume"/></svg>ÁUDIO</div>
+          <div class="row"><div><span>Motor do carro</span><small>Som procedural em tempo real</small></div><button class="switch on" id="set-engine" aria-label="Som do motor"></button></div>
+          <div class="row col"><div><span>Volume dos efeitos</span><small>Motor, buzina, pneus, vento</small></div>
+            <input id="set-sfx" type="range" min="0" max="100" value="65" aria-label="Volume dos efeitos"></div>
+          <div class="row col"><div><span>Volume da rádio</span><small>Música da playlist</small></div>
+            <input id="set-music" type="range" min="0" max="100" value="72" aria-label="Volume da rádio"></div>
+          <div class="row"><div><span>Ambiente da cidade</span><small>Ruído urbano de fundo</small></div><button class="switch on" id="set-ambient" aria-label="Ambiente"></button></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><svg class="ico sm"><use href="#i-wheel"/></svg>DIREÇÃO</div>
+          <div class="row"><div><span>Assistência de estabilidade</span><small>Segura o carro nas curvas</small></div><button class="switch on" id="set-assist" aria-label="Assistência"></button></div>
+          <div class="row"><div><span>Câmera inicial</span><small>Ao começar a dirigir</small></div>
+            <select class="select" id="set-camera"><option value="third">3ª pessoa</option><option value="first">1ª pessoa</option></select></div>
+          <div class="row col"><div><span>Sensibilidade do volante</span><small>Toque e mouse</small></div>
+            <input id="set-sens" type="range" min="30" max="150" value="100" aria-label="Sensibilidade"></div>
+          <div class="row"><div><span>Salvar progresso</span><small>Carro, posição e ajustes</small></div><button class="switch on" id="set-save" aria-label="Salvar progresso"></button></div>
+          <div class="row"><div><span>Apagar progresso</span><small>Recomeça do zero</small></div><button class="mini-btn danger" id="btn-reset-save">APAGAR</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- CONTROLS ---------- -->
+    <section class="page" id="page-controls">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">APRENDA A DIRIGIR</div>
+          <h2 class="display sm">CONTROLES<br><span>DO JOGO.</span></h2>
+        </div>
+        <p class="page-note">Teclado, mouse, controle e celular. A câmera alterna entre 1ª e 3ª pessoa a qualquer momento com a tecla C.</p>
+      </div>
+      <div class="controls-grid">
+        <div class="card">
+          <div class="card-title">TECLADO</div>
+          <div class="keys">
+            <div class="key-row"><span>Acelerar</span><div><kbd>W</kbd><kbd>↑</kbd></div></div>
+            <div class="key-row"><span>Frear / ré</span><div><kbd>S</kbd><kbd>↓</kbd></div></div>
+            <div class="key-row"><span>Virar</span><div><kbd>A</kbd><kbd>D</kbd></div></div>
+            <div class="key-row"><span>Freio de mão</span><div><kbd>ESPAÇO</kbd></div></div>
+            <div class="key-row"><span>Trocar câmera</span><div><kbd>C</kbd></div></div>
+            <div class="key-row"><span>Buzina</span><div><kbd>H</kbd></div></div>
+            <div class="key-row"><span>Faróis</span><div><kbd>L</kbd></div></div>
+            <div class="key-row"><span>Pisca-alerta</span><div><kbd>J</kbd></div></div>
+            <div class="key-row"><span>Mapa / GPS</span><div><kbd>M</kbd></div></div>
+            <div class="key-row"><span>Garagem</span><div><kbd>G</kbd></div></div>
+            <div class="key-row"><span>Pausa</span><div><kbd>ESC</kbd></div></div>
+            <div class="key-row"><span>Modo foto</span><div><kbd>F</kbd></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">MOUSE · TOQUE · CONTROLE</div>
+          <div class="notes">
+            <div><b>Mouse</b><p>Arraste na tela para olhar em volta na 3ª pessoa. A roda do mouse aproxima e afasta a câmera.</p></div>
+            <div><b>Toque</b><p>Use o direcional virtual à esquerda, os pedais à direita e os botões de câmera, farol e buzina.</p></div>
+            <div><b>Controle</b><p>Analógico esquerdo vira, gatilhos aceleram e freiam, botão A troca a câmera. Conecte antes de abrir o jogo.</p></div>
+          </div>
+          <div class="credits">
+            <b>CRÉDITOS</b>
+            <p>Dados de ruas, prédios, parques e pontos turísticos © colaboradores do OpenStreetMap (ODbL). Cenário 3D, veículos, interface e áudio gerados em tempo real no navegador com Three.js e Web Audio.</p>
+            <p>Projeto de demonstração sem afiliação com marcas de veículos, YouTube, Piped ou com a Prefeitura de São Paulo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= HUD ================= -->
+<div id="hud" aria-hidden="true">
+  <div class="hud-top">
+    <div class="hud-brand"><i></i><b>SAMPA DRIVER</b><span class="hud-district" id="hud-district">PAULISTA</span></div>
+    <div class="hud-center">
+      <div class="hud-pill" id="hud-weather-pill"><svg class="ico sm"><use href="#i-cloud"/></svg><span id="hud-weather">24°</span></div>
+      <div class="hud-pill"><svg class="ico sm"><use href="#i-clock"/></svg><span id="hud-clock">16:00</span></div>
+    </div>
+    <div class="hud-actions">
+      <button class="hud-btn" id="hud-map" title="Mapa e GPS (M)"><svg class="ico sm"><use href="#i-map"/></svg><span>MAPA</span></button>
+      <button class="hud-btn" id="hud-garage" title="Garagem (G)"><svg class="ico sm"><use href="#i-garage"/></svg><span>GARAGEM</span></button>
+      <button class="hud-btn" id="hud-photo" title="Modo foto (F)"><svg class="ico sm"><use href="#i-photo"/></svg></button>
+      <button class="hud-btn" id="hud-pause" title="Pausar (ESC)"><svg class="ico sm"><use href="#i-pause"/></svg></button>
+    </div>
+  </div>
+
+  <div class="hud-left">
+    <div class="hud-card mini-card">
+      <div class="mini-head"><span>GPS · <b class="mono" id="mini-coord">-23.5614</b></span><button class="mini-ico" id="mini-mode" title="Girar mapa">↻</button></div>
+      <div class="mini-canvas-wrap">
+        <canvas id="minimap"></canvas>
+        <div class="mini-compass" id="mini-compass">N</div>
+        <div class="mini-zoom">
+          <button id="mini-zoom-in">+</button>
+          <button id="mini-zoom-out">−</button>
+        </div>
+      </div>
+    </div>
+    <div class="hud-card nav-card" id="nav-card">
+      <div class="nav-top">
+        <div class="nav-arrow" id="nav-arrow"><svg class="ico"><use href="#i-arrow"/></svg></div>
+        <div class="nav-copy">
+          <b id="nav-instr">Passeio livre</b>
+          <span class="mono" id="nav-distance">—</span>
+        </div>
+      </div>
+      <div class="nav-street" id="nav-street">Escolha um destino no mapa</div>
+      <div class="nav-bar"><i id="nav-progress"></i></div>
+      <div class="nav-meta"><span id="nav-eta">—</span><span id="nav-total">—</span></div>
+    </div>
+  </div>
+
+  <div class="hud-right">
+    <div class="hud-card car-card">
+      <div class="car-card-top"><small>VEÍCULO</small><span class="paint-dot sm" id="hud-paint"></span></div>
+      <b id="hud-car">Fusca Noturno</b>
+      <div class="car-badges"><span id="hud-engine">1.3 BOXER</span><span id="hud-drive">RWD</span></div>
+      <div class="cond"><i id="hud-cond-bar" style="width:100%"></i></div>
+    </div>
+    <div class="hud-card radio-card">
+      <div class="radio-card-head"><span><svg class="ico sm"><use href="#i-radio"/></svg>RÁDIO</span><div class="mini-eq sm" id="hud-eq"><i></i><i></i><i></i><i></i><i></i></div></div>
+      <b id="hud-track">Rádio desligado</b>
+      <small id="hud-radio-sub">Abra o rádio para conectar</small>
+      <div class="radio-card-actions">
+        <button class="mini-ico" id="hud-radio-prev"><svg class="ico sm"><use href="#i-prev"/></svg></button>
+        <button class="mini-ico play" id="hud-radio-play"><svg class="ico sm"><use href="#i-play"/></svg></button>
+        <button class="mini-ico" id="hud-radio-next"><svg class="ico sm"><use href="#i-next"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="speedo-card">
+      <canvas id="speedo" width="260" height="260"></canvas>
+      <div class="speedo-read">
+        <b id="speed">0</b>
+        <span>KM/H</span>
+        <div class="gear-pill"><small>MARCHA</small><i id="gear">N</i></div>
+      </div>
+      <div class="rpm"><i id="rpm-bar"></i></div>
+      <div class="speedo-foot"><span id="drive-state">PARADO</span><b class="mono" id="odometer">0.0 KM</b></div>
+    </div>
+    <div class="hud-center-bottom">
+      <div class="drift-badge" id="drift-badge">DRIFT</div>
+      <div class="hints"><kbd>W A S D</kbd> DIRIGIR <kbd>ESPAÇO</kbd> FREIO DE MÃO <kbd>C</kbd> CÂMERA <kbd>H</kbd> BUZINA</div>
+    </div>
+    <div class="hud-tools">
+      <button class="tool-btn" id="btn-camera"><svg class="ico"><use href="#i-camera"/></svg><span id="camera-label">3ª</span></button>
+      <button class="tool-btn" id="btn-lights"><svg class="ico"><use href="#i-bulb"/></svg><span>LUZ</span></button>
+      <button class="tool-btn" id="btn-hazard"><svg class="ico"><use href="#i-hazard"/></svg><span>PISCA</span></button>
+      <button class="tool-btn" id="btn-horn"><svg class="ico"><use href="#i-horn"/></svg><span>BUZINA</span></button>
+    </div>
+  </div>
+
+  <div class="photo-badge" id="photo-badge">MODO FOTO · F PARA SAIR</div>
+
+  <div id="touch">
+    <div class="stick-zone" id="stick-zone"><div class="stick-base"><div class="stick-knob" id="stick-knob"></div></div></div>
+    <div class="pedals">
+      <button class="pedal brake" id="pedal-brake">▼</button>
+      <button class="pedal gas" id="pedal-gas">▲</button>
+    </div>
+    <div class="touch-tools">
+      <button class="tool-btn sm" id="t-camera"><svg class="ico sm"><use href="#i-camera"/></svg></button>
+      <button class="tool-btn sm" id="t-horn"><svg class="ico sm"><use href="#i-horn"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAYS ================= -->
+<div class="overlay" id="pause">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="eyebrow">JOGO PAUSADO</div><h3>DEIXA O MOTOR<br><span>NO PONTO.</span></h3></div>
+      <button class="close" id="pause-close"><svg class="ico"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="pause-list">
+      <button class="pause-item" id="pause-resume"><b>Continuar dirigindo</b><small>Voltar para a rua</small><svg class="ico"><use href="#i-play"/></svg></button>
+      <button class="pause-item" id="pause-garage"><b>Trocar de carro</b><small>Fusca, Uno ou Jipe</small><svg class="ico"><use href="#i-garage"/></svg></button>
+      <button class="pause-item" id="pause-map"><b>Mapa e GPS</b><small>Traçar novo destino</small><svg class="ico"><use href="#i-map"/></svg></button>
+      <button class="pause-item" id="pause-settings"><b>Ajustes</b><small>Gráficos, clima e som</small><svg class="ico"><use href="#i-sliders"/></svg></button>
+      <button class="pause-item" id="pause-reset"><b>Desatolar o carro</b><small>Voltar para a rua mais próxima</small><svg class="ico"><use href="#i-reset"/></svg></button>
+      <button class="pause-item danger" id="pause-menu"><b>Sair para o menu</b><small>Voltar à tela inicial</small><svg class="ico"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="pause-foot"><span>ODÔMETRO <b class="mono" id="pause-odo">0.0 KM</b></span><span>DISTRITO <b id="pause-district">Paulista</b></span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i></i><span id="toast-text">Pronto</span></div>
+
+<iframe id="yt" title="Áudio do rádio (YouTube)" allow="autoplay; encrypted-media" tabindex="-1"></iframe>
+<script>/*__THREE__*/</script>
+<script>
+/*__GAME__*/
+</script>
+</body>
+</html>
