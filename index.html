@@ -2422,40 +2422,92 @@ function createVehicle(type){
     }
     toast("GPS definido: "+dest.name);
   }
-  async function fetchOSM(){
-    const bootLabel=$("connection-label");
-    const queries=[ '[out:json][timeout:40];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"](around:2150,-23.5614,-46.6559);way["building"](around:1750,-23.5614,-46.6559););out geom;',  '[out:json][timeout:40];(way["highway"](around:1500,-23.5614,-46.6559);way["building"](around:1250,-23.5614,-46.6559););out geom;' ];
-    const hosts=["https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass-api.de/api/interpreter"];
-    let success=false;
-    for(let attempt=0;
-    attempt<hosts.length&&!success;
-    attempt++){
-      try{
-        const controller=new AbortController(), timer=setTimeout(()=>controller.abort(), 11500);
-        const response=await fetch(hosts[attempt]+"?data="+encodeURIComponent(queries[attempt===0?0:1]),{
-          signal:controller.signal
-        }
-        );
-        clearTimeout(timer);
-        if(!response.ok)throw new Error("Servidor cartográfico respondeu "+response.status);
-        const data=await response.json();
-        if(!data.elements||data.elements.length<30)throw new Error("Dados cartográficos insuficientes");
-        toast("Dados reais do mapa recebidos · montando a cidade 3D");
-        const stats=createOSMWorld(data.elements);
-        if(stats.roads<12||stats.buildings<15)throw new Error("Geometria incompleta");
+  function osmQuery(lat,lon,radius){
+    const road='["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$"]';
+    const amenities='["amenity"~"^(restaurant|cafe|bank|pharmacy|fuel|hospital|clinic|school|university|police|post_office|marketplace|fast_food|bar|library|place_of_worship|theatre|cinema|supermarket)$"]';
+    const tourism='["tourism"~"^(hotel|museum|attraction|viewpoint|gallery|hostel)$"]';
+    const leisure='["leisure"~"^(park|garden|sports_centre|stadium|playground)$"]';
+    return '[out:json][timeout:28];('+
+      'way'+road+'(around:'+radius+','+lat+','+lon+');'+
+      'way["building"](around:'+radius+','+lat+','+lon+');'+
+      'node["shop"](around:'+radius+','+lat+','+lon+');'+
+      'way["shop"](around:'+radius+','+lat+','+lon+');'+
+      'node'+amenities+'(around:'+radius+','+lat+','+lon+');'+
+      'way'+amenities+'(around:'+radius+','+lat+','+lon+');'+
+      'node'+tourism+'(around:'+radius+','+lat+','+lon+');'+
+      'way'+tourism+'(around:'+radius+','+lat+','+lon+');'+
+      'node'+leisure+'(around:'+radius+','+lat+','+lon+');'+
+      'way'+leisure+'(around:'+radius+','+lat+','+lon+');'+
+      'node["natural"="tree"](around:'+radius+','+lat+','+lon+');'+
+      'node["highway"="street_lamp"](around:'+radius+','+lat+','+lon+');'+
+      ');out center geom;';
+  }
+  async function loadCityChunk(tx,tz,radius=1150){
+    const key=tx+":"+tz;
+    if(state.loadedChunks.has(key)||state.loadingChunks.has(key))return false;
+    const retryAt=state.chunkRetry.get(key)||0;
+    if(Date.now()<retryAt)return false;
+    state.loadingChunks.add(key);
+    const centerX=tx*1400,centerZ=tz*1400,ll=geoPoint(centerX,centerZ);
+    const query=osmQuery(ll.lat.toFixed(6),ll.lon.toFixed(6),radius);
+    const hosts=["https://overpass.private.coffee/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass-api.de/api/interpreter"];
+    try{
+      let data=null,lastError=null;
+      for(const host of hosts){
+        try{
+          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10500);
+          const response=await fetch(host+"?data="+encodeURIComponent(query),{signal:controller.signal});
+          clearTimeout(timer);
+          if(!response.ok)throw new Error("Overpass HTTP "+response.status);
+          data=await response.json();
+          if(!data.elements||data.elements.length<8)throw new Error("Área sem dados cartográficos suficientes");
+          break;
+        }catch(error){lastError=error;console.warn("Overpass:",error.message)}
+      }
+      if(!data)throw lastError||new Error("Servidores cartográficos indisponíveis");
+      const unique=[];
+      for(const el of data.elements){
+        const id=el.type+"/"+el.id;
+        if(state.loadedElementIds.has(id))continue;
+        state.loadedElementIds.add(id);
+        unique.push(el);
+      }
+      if(unique.length){
+        const stats=createOSMWorld(unique,state.loadedChunks.size>0);
         state.worldReady=true;
-        success=true;
-        bootLabel.textContent="OPENSTREETMAP CONECTADO";
+        if(stats.buildings||stats.roads||stats.places){
+          $("connection-label").textContent="OPENSTREETMAP · "+state.loadedChunks.size+" SETORES";
+          toast("Mapa real: "+stats.buildings+" edifícios · "+stats.places+" locais nomeados");
+        }
       }
-      catch(error){
-        console.warn("OSM:", error.message)
-      }
+      state.loadedChunks.add(key);
+      state.chunkRetry.delete(key);
+      return true;
+    }catch(error){
+      state.chunkRetry.set(key,Date.now()+45000);
+      console.warn("Área OSM "+key+":",error&&error.message||error);
+      return false;
+    }finally{
+      state.loadingChunks.delete(key);
     }
-    if(!success){
-      createFallbackCity();
-      state.worldReady=true;
-      bootLabel.textContent="MODO OFFLINE · CENÁRIO ALTERNATIVO";
-      toast("Mapa online indisponível · você continua podendo jogar no cenário local.");
+  }
+  async function fetchOSM(){
+    const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400);
+    const ok=await loadCityChunk(tx,tz,1650);
+    if(!ok){
+      $("connection-label").textContent="OPENSTREETMAP INDISPONÍVEL";
+      toast("Sem resposta do mapa real. Nenhum prédio fictício será criado.");
+    }else{
+      $("connection-label").textContent="OPENSTREETMAP CONECTADO";
+      updateMap();
+    }
+  }
+  function ensureCityCoverage(){
+    if(!state.started||state.paused||Date.now()-state.chunkCheckAt<3500)return;
+    state.chunkCheckAt=Date.now();
+    const tx=Math.round(state.x/1400),tz=Math.round(state.z/1400),key=tx+":"+tz;
+    if(!state.loadedChunks.has(key)&&!state.loadingChunks.has(key)){
+      loadCityChunk(tx,tz,1150).then(ok=>{if(ok)updateMap()});
     }
   }
   function isBlocked(x, z){
@@ -2631,6 +2683,7 @@ function createVehicle(type){
     $("hud-condition").textContent=Math.round(state.condition)+"%";
     updateEngine();
     if(Date.now()-lastMapTick>1100)updateMap();
+    ensureCityCoverage();
     if(Date.now()-lastAutosave>10000){
       lastAutosave=Date.now();
       saveState()
