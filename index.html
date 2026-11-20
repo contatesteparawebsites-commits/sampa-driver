@@ -392,7 +392,7 @@ const state={
  mapReady:false,worldReady:false,loading:false,radioQueue:[],radioIndex:0,radioPlaying:false,radioType:"",radioYT:false,radioAudio:new Audio(),
 };
 let scene,camera,renderer,clock,carRoot,carBody,cityRoot,worldSun,engineContext,engineOsc,engineGain,engineFilter;
-let buildingCount=0,roadCount=0,lastMapTick=0,lastLocation="AV. PAULISTA",lastAutosave=0;
+let buildingCount=0,roadCount=0,lastMapTick=0,lastLocation="AV. PAULISTA",lastAutosave=0,eventsBound=false;
 const mats={};
 function setBoot(percent,message){
  $("boot-progress").style.width=percent+"%";
@@ -824,7 +824,7 @@ async function calculateRoute(id){
   state.bigRoute=L.polyline(coords.map(c=>[c[1],c[0]]),{color:"#39bacb",weight:5}).addTo(state.bigMap);
  }
  const points=coords.map(c=>{const p=worldPoint(c[1],c[0]);return new THREE.Vector3(p.x,.24,p.z)});
- if(points.length>1){
+ if(points.length>1&&window.THREE&&scene){
   const geometry=new THREE.BufferGeometry().setFromPoints(points);
   state.routeLine=new THREE.Line(geometry,new THREE.LineDashedMaterial({color:0x73e1e1,dashSize:5,gapSize:3,transparent:true,opacity:.9}));
   state.routeLine.computeLineDistances();scene.add(state.routeLine);
@@ -893,8 +893,9 @@ function horn(){
  gain.gain.setTargetAtTime(.0001,engineContext.currentTime+.22,.06);osc.stop(engineContext.currentTime+.55);
 }
 function setLights(){
+ if(!carBody){toast("Os faróis estarão disponíveis ao entrar no jogo");return}
  state.headlights=!state.headlights;
- if(carBody&&carBody.userData.lights)carBody.userData.lights.forEach(l=>l.intensity=state.headlights?2.5:0);
+ if(carBody.userData.lights)carBody.userData.lights.forEach(l=>l.intensity=state.headlights?2.5:0);
  $("lights-btn").classList.toggle("active",state.headlights);
  toast(state.headlights?"Faróis ligados":"Faróis desligados");
 }
@@ -905,6 +906,7 @@ function toggleCamera(){
 }
 function weatherChange(value){
  state.weather=value;$("weather-rain").classList.toggle("on",value==="rain");
+ if(!scene)return;
  if(value==="fog"){scene.fog.density=.0024;scene.fog.near=100;scene.fog.far=480}
  else{scene.fog.density=0;scene.fog.near=280;scene.fog.far=state.settings.distance==="low"?550:state.settings.distance==="medium"?950:1500}
  if(value==="cloudy"){worldSun.intensity=1.2;scene.background.setHex(0x788c96);scene.fog.color.setHex(0x788c96)}
@@ -913,20 +915,23 @@ function weatherChange(value){
 }
 function setTimeLighting(){
  const hour=Math.floor(state.timeMinutes/60)%24;
+ $("hud-time").textContent=String(hour).padStart(2,"0")+":"+String(Math.floor(state.timeMinutes%60)).padStart(2,"0");
+ if(!scene)return;
  const night=hour<6||hour>=19,twilight=hour>=17&&hour<19||hour>=5&&hour<7;
  const sky=night?0x152331:twilight?0x889da5:0xa8c4ce;
  scene.background.setHex(sky);scene.fog.color.setHex(sky);
  worldSun.intensity=night?.18:twilight?1.05:state.weather==="cloudy"?1.15:2.3;
  worldSun.color.setHex(night?0x8299c4:0xffebce);
  renderer.toneMappingExposure=night?.92:1.12;
- $("hud-time").textContent=String(hour).padStart(2,"0")+":"+String(Math.floor(state.timeMinutes%60)).padStart(2,"0");
- if(state.headlights&&carBody.userData.lights)carBody.userData.lights.forEach(l=>l.intensity=night?2.5:1.4);
+ if(state.headlights&&carBody&&carBody.userData.lights)carBody.userData.lights.forEach(l=>l.intensity=night?2.5:1.4);
 }
 function applyQuality(value){
  state.quality=value;const ratio=value==="high"?1.65:value==="medium"?1.15:.78;
- renderer.setPixelRatio(Math.min(devicePixelRatio,ratio));
- renderer.shadowMap.enabled=state.settings.shadows&&value!=="low";
- scene.fog.far=state.settings.distance==="low"?530:state.settings.distance==="medium"?950:1500;
+ if(renderer){
+  renderer.setPixelRatio(Math.min(devicePixelRatio,ratio));
+  renderer.shadowMap.enabled=state.settings.shadows&&value!=="low";
+ }
+ if(scene)scene.fog.far=state.settings.distance==="low"?530:state.settings.distance==="medium"?950:1500;
  $("quality-select").value=value;$("quality-menu").textContent="GRÁFICOS · "+value.toUpperCase();
  toast("Qualidade gráfica: "+({high:"alta",medium:"média",low:"baixa"}[value]));
 }
@@ -1195,6 +1200,8 @@ function syncSettingsUI(){
  $("sfx-volume").value=state.settings.sfx;
 }
 function setupEvents(){
+ if(eventsBound)return;
+ eventsBound=true;
  setupNavigation();setupTouch();bindSettings();populateDestinations();
  document.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>button.blur(),{passive:true}));
  $("menu-exit").addEventListener("click",()=>{
@@ -1291,9 +1298,12 @@ function loadExternalScript(source){
  });
 }
 boot().catch(error=>{
- console.error(error);
- setBoot(100,"Inicialização concluída com recursos alternativos");
- setTimeout(()=>$("boot").classList.add("hide"),700);
+ console.error("Falha ao iniciar o motor:",error);
+ try{setupEvents();renderVehicles()}catch(uiError){console.error("Interface:",uiError)}
+ $("connection-label").textContent="MODO DE COMPATIBILIDADE";
+ setBoot(100,"Interface pronta · "+(error&&error.message?error.message:"motor 3D indisponível"));
+ $("boot").classList.add("hide");
+ toast("A interface abriu. Confira a conexão e o suporte WebGL para iniciar o 3D.");
 });
 })();
 </script>
