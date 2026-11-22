@@ -172,7 +172,7 @@
             <div class="tile-head"><span>RÁDIO DO CARRO</span><svg class="ico sm"><use href="#i-radio"/></svg></div>
             <div class="mini-eq" id="home-eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
             <b id="home-radio-title">Desligado</b>
-            <small id="home-radio-sub">Cole uma playlist do YouTube ou Piped</small>
+            <small id="home-radio-sub">4 estações de eletrônica</small>
             <button class="mini-btn" id="home-radio-open" data-page="radio">ABRIR RÁDIO</button>
           </div>
           <div class="tile tile-cars">
@@ -288,7 +288,7 @@
           <div class="eyebrow">SOM NA CABINE</div>
           <h2 class="display sm">SINTONIZE<br><span>O ROLÊ.</span></h2>
         </div>
-        <p class="page-note">Cole o link de uma playlist do YouTube (toca só o áudio, player escondido), de uma instância Piped ou de um stream de áudio direto.</p>
+        <p class="page-note">Quatro estações de música eletrônica compostas e tocadas <b>dentro do jogo</b>: bateria, baixo, acordes e arpejos sintetizados na hora. Sem internet, sem anúncio e sem travamento.</p>
       </div>
       <div class="radio-grid">
         <div class="radio-player">
@@ -311,23 +311,9 @@
           </div>
         </div>
         <div class="radio-config">
-          <div class="tabs" id="radio-tabs">
-            <button class="tab active" data-src="youtube">YouTube</button>
-            <button class="tab" data-src="piped">Piped</button>
-            <button class="tab" data-src="direct">Link direto</button>
-          </div>
-          <label for="radio-url" id="radio-url-label">LINK DA PLAYLIST DO YOUTUBE</label>
-          <div class="input-row">
-            <input id="radio-url" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://www.youtube.com/playlist?list=…">
-            <button class="btn btn-primary sm" id="radio-connect">CONECTAR</button>
-          </div>
-          <div class="radio-hint" id="radio-hint">O player do YouTube fica escondido e o áudio toca dentro do jogo. A primeira faixa só começa depois de um clique (política dos navegadores).</div>
-          <div class="radio-presets">
-            <button class="preset" data-preset="direct" data-url="https://stream.zeno.fm/8wv4d0g5uf9uv">Rádio Zeno</button>
-            <button class="preset" data-preset="direct" data-url="https://ice1.somafm.com/groovesalad-128-mp3">SomaFM Groove</button>
-            <button class="preset" data-preset="youtube" data-url="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi 24/7</button>
-          </div>
-          <div class="radio-status" id="radio-status"><i></i><span>Pronto</span></div>
+          <div class="rad-head"><span>ESTAÇÕES DA CASA</span><span class="tag-mini" id="radio-status"><i></i><b>parada</b></span></div>
+          <div class="station-list" id="radio-stations"></div>
+          <div class="radio-hint">Música eletrônica <b>gerada dentro do jogo</b>: house, techno, eletro brasileiro e lo-fi. Nada é baixado, funciona sem internet e sem anúncio.</div>
         </div>
       </div>
     </section>
@@ -345,7 +331,8 @@
         <div class="card">
           <div class="card-title"><svg class="ico sm"><use href="#i-camera"/></svg>GRÁFICOS</div>
           <div class="row"><div><span>Qualidade geral</span><small>Resolução, sombras e detalhes</small></div>
-            <select class="select" id="set-quality"><option value="high">Alta</option><option value="balanced">Equilibrada</option><option value="low">Baixa</option></select></div>
+            <select class="select" id="set-quality"><option value="auto">Automático (recomendado)</option>
+            <option value="high">Alta</option><option value="balanced">Equilibrada</option><option value="low">Baixa</option></select></div>
           <div class="row"><div><span>Sombras dinâmicas</span><small>Sombras do carro e prédios</small></div><button class="switch on" id="set-shadows" aria-label="Sombras"></button></div>
           <div class="row"><div><span>Distância de visão</span><small>Névoa e alcance da cidade</small></div>
             <select class="select" id="set-view"><option value="far">Longa</option><option value="mid">Média</option><option value="near">Curta</option></select></div>
@@ -480,7 +467,7 @@
     <div class="hud-card radio-card">
       <div class="radio-card-head"><span><svg class="ico sm"><use href="#i-radio"/></svg>RÁDIO</span><div class="mini-eq sm" id="hud-eq"><i></i><i></i><i></i><i></i><i></i></div></div>
       <b id="hud-track">Rádio desligado</b>
-      <small id="hud-radio-sub">Abra o rádio para conectar</small>
+      <small id="hud-radio-sub">Abra o rádio para sintonizar</small>
       <div class="radio-card-actions">
         <button class="mini-ico" id="hud-radio-prev"><svg class="ico sm"><use href="#i-prev"/></svg></button>
         <button class="mini-ico play" id="hud-radio-play"><svg class="ico sm"><use href="#i-play"/></svg></button>

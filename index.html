@@ -57,9 +57,9 @@ b,strong{font-weight:800}
 #world canvas{display:block;width:100%;height:100%;outline:none}
 #atmos{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:
-    radial-gradient(ellipse 120% 60% at 50% 105%,rgba(4,8,11,.55),transparent 62%),
-    radial-gradient(ellipse 90% 50% at 50% -10%,rgba(120,170,190,.12),transparent 60%);
-  mix-blend-mode:multiply;opacity:.9}
+    radial-gradient(ellipse 130% 42% at 50% 118%,rgba(6,12,16,.26),transparent 62%),
+    radial-gradient(ellipse 90% 50% at 50% -10%,rgba(120,170,190,.10),transparent 60%);
+  mix-blend-mode:multiply;opacity:.8}
 #rain-layer{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .5s;
   background:
     repeating-linear-gradient(101deg,transparent 0 7px,rgba(214,238,255,.16) 8px,rgba(214,238,255,.16) 9px,transparent 10px 23px);
@@ -659,6 +659,32 @@ body.touch .hints{display:none}
 .brand-emblem{display:grid;place-items:center;width:22px;height:22px}
 .boot-mark{background:linear-gradient(160deg,#e9e4d6,#cfd8d2);color:#12201a}
 
+/* ---------- estações da rádio ---------- */
+.rad-head{display:flex;justify-content:space-between;align-items:center;font-size:8.5px;letter-spacing:.18em;
+  color:var(--muted);font-weight:800;margin-bottom:12px}
+.rad-head .tag-mini{display:flex;align-items:center;gap:6px;color:#9fb1b6;border:1px solid var(--line);
+  border-radius:999px;padding:4px 9px;font-size:8px;letter-spacing:.14em;text-transform:uppercase}
+.rad-head .tag-mini i{width:5px;height:5px;border-radius:50%;background:#5b6b71}
+.rad-head .tag-mini.on i{background:var(--lime);box-shadow:0 0 0 3px rgba(211,251,104,.16)}
+.station-list{display:grid;gap:8px;margin-bottom:14px}
+.station{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border-radius:13px;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--white);cursor:pointer;
+  transition:border-color .18s,background .18s,transform .18s}
+.station:hover{border-color:rgba(211,251,104,.4);background:rgba(211,251,104,.06);transform:translateX(3px)}
+.station.active{border-color:rgba(211,251,104,.55);background:rgba(211,251,104,.1)}
+.station b{display:block;font-size:12px;letter-spacing:.03em}
+.station small{display:block;color:#93a7ae;font-size:10px;margin-top:2px}
+.st-eq{display:flex;align-items:flex-end;gap:2px;width:18px;height:18px;flex:none}
+.st-eq i{flex:1;height:28%;border-radius:2px;background:var(--lime);opacity:.45;transition:height .2s}
+.station.playing .st-eq i{opacity:1;animation:eqBar .85s ease-in-out infinite}
+.station.playing .st-eq i:nth-child(2){animation-delay:.12s}
+.station.playing .st-eq i:nth-child(3){animation-delay:.26s}
+.station.playing .st-eq i:nth-child(4){animation-delay:.38s}
+@keyframes eqBar{0%,100%{height:22%}50%{height:100%}}
+.st-play{margin-left:auto;color:#7f959c;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  border:1px solid var(--line);flex:none}
+.station.active .st-play{color:#12200f;background:var(--lime);border-color:transparent}
+
 </style>
 </head>
 <body>
@@ -820,7 +846,7 @@ body.touch .hints{display:none}
             <div class="tile-head"><span>RÁDIO DO CARRO</span><svg class="ico sm"><use href="#i-radio"/></svg></div>
             <div class="mini-eq" id="home-eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
             <b id="home-radio-title">Desligado</b>
-            <small id="home-radio-sub">Cole uma playlist do YouTube ou Piped</small>
+            <small id="home-radio-sub">4 estações de eletrônica</small>
             <button class="mini-btn" id="home-radio-open" data-page="radio">ABRIR RÁDIO</button>
           </div>
           <div class="tile tile-cars">
@@ -936,7 +962,7 @@ body.touch .hints{display:none}
           <div class="eyebrow">SOM NA CABINE</div>
           <h2 class="display sm">SINTONIZE<br><span>O ROLÊ.</span></h2>
         </div>
-        <p class="page-note">Cole o link de uma playlist do YouTube (toca só o áudio, player escondido), de uma instância Piped ou de um stream de áudio direto.</p>
+        <p class="page-note">Quatro estações de música eletrônica compostas e tocadas <b>dentro do jogo</b>: bateria, baixo, acordes e arpejos sintetizados na hora. Sem internet, sem anúncio e sem travamento.</p>
       </div>
       <div class="radio-grid">
         <div class="radio-player">
@@ -959,23 +985,9 @@ body.touch .hints{display:none}
           </div>
         </div>
         <div class="radio-config">
-          <div class="tabs" id="radio-tabs">
-            <button class="tab active" data-src="youtube">YouTube</button>
-            <button class="tab" data-src="piped">Piped</button>
-            <button class="tab" data-src="direct">Link direto</button>
-          </div>
-          <label for="radio-url" id="radio-url-label">LINK DA PLAYLIST DO YOUTUBE</label>
-          <div class="input-row">
-            <input id="radio-url" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://www.youtube.com/playlist?list=…">
-            <button class="btn btn-primary sm" id="radio-connect">CONECTAR</button>
-          </div>
-          <div class="radio-hint" id="radio-hint">O player do YouTube fica escondido e o áudio toca dentro do jogo. A primeira faixa só começa depois de um clique (política dos navegadores).</div>
-          <div class="radio-presets">
-            <button class="preset" data-preset="direct" data-url="https://stream.zeno.fm/8wv4d0g5uf9uv">Rádio Zeno</button>
-            <button class="preset" data-preset="direct" data-url="https://ice1.somafm.com/groovesalad-128-mp3">SomaFM Groove</button>
-            <button class="preset" data-preset="youtube" data-url="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi 24/7</button>
-          </div>
-          <div class="radio-status" id="radio-status"><i></i><span>Pronto</span></div>
+          <div class="rad-head"><span>ESTAÇÕES DA CASA</span><span class="tag-mini" id="radio-status"><i></i><b>parada</b></span></div>
+          <div class="station-list" id="radio-stations"></div>
+          <div class="radio-hint">Música eletrônica <b>gerada dentro do jogo</b>: house, techno, eletro brasileiro e lo-fi. Nada é baixado, funciona sem internet e sem anúncio.</div>
         </div>
       </div>
     </section>
@@ -993,7 +1005,8 @@ body.touch .hints{display:none}
         <div class="card">
           <div class="card-title"><svg class="ico sm"><use href="#i-camera"/></svg>GRÁFICOS</div>
           <div class="row"><div><span>Qualidade geral</span><small>Resolução, sombras e detalhes</small></div>
-            <select class="select" id="set-quality"><option value="high">Alta</option><option value="balanced">Equilibrada</option><option value="low">Baixa</option></select></div>
+            <select class="select" id="set-quality"><option value="auto">Automático (recomendado)</option>
+            <option value="high">Alta</option><option value="balanced">Equilibrada</option><option value="low">Baixa</option></select></div>
           <div class="row"><div><span>Sombras dinâmicas</span><small>Sombras do carro e prédios</small></div><button class="switch on" id="set-shadows" aria-label="Sombras"></button></div>
           <div class="row"><div><span>Distância de visão</span><small>Névoa e alcance da cidade</small></div>
             <select class="select" id="set-view"><option value="far">Longa</option><option value="mid">Média</option><option value="near">Curta</option></select></div>
@@ -1128,7 +1141,7 @@ body.touch .hints{display:none}
     <div class="hud-card radio-card">
       <div class="radio-card-head"><span><svg class="ico sm"><use href="#i-radio"/></svg>RÁDIO</span><div class="mini-eq sm" id="hud-eq"><i></i><i></i><i></i><i></i><i></i></div></div>
       <b id="hud-track">Rádio desligado</b>
-      <small id="hud-radio-sub">Abra o rádio para conectar</small>
+      <small id="hud-radio-sub">Abra o rádio para sintonizar</small>
       <div class="radio-card-actions">
         <button class="mini-ico" id="hud-radio-prev"><svg class="ico sm"><use href="#i-prev"/></svg></button>
         <button class="mini-ico play" id="hud-radio-play"><svg class="ico sm"><use href="#i-play"/></svg></button>
@@ -1367,7 +1380,7 @@ const CARS = {
 };
 
 const DEFAULTS = {
-  quality: "high", shadows: true, view: "far", traffic: "mid",
+  quality: "auto", shadows: true, view: "far", traffic: "mid",
   weather: "clear", timelapse: true, hour: 16, autolight: true,
   engine: true, sfx: 0.65, music: 0.72, ambient: true,
   assist: true, camera: "third", sens: 1, save: true, district: "paulista"
@@ -1643,24 +1656,43 @@ function initAudio() {
     AUDIO.master = master;
     AUDIO.noiseBuffer = audioNoiseBuffer(ctx, 2.4);
 
-    /* --- engine --- */
+    /* --- engine (pilha harmônica + saturação) --- */
     const eg = ctx.createGain(); eg.gain.value = 0.0001;
-    const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 620; ef.Q.value = 1.6;
+    const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 700; ef.Q.value = 3.2;
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) {
+      const x = (i / 1023) * 2 - 1;
+      curve[i] = Math.tanh(x * 2.6);
+    }
+    shaper.curve = curve;
+    shaper.oversample = "2x";
     const osc1 = ctx.createOscillator(); osc1.type = "sawtooth"; osc1.frequency.value = 70;
-    const osc2 = ctx.createOscillator(); osc2.type = "square"; osc2.frequency.value = 35; osc2.detune.value = 6;
-    const osc3 = ctx.createOscillator(); osc3.type = "triangle"; osc3.frequency.value = 140;
-    const g1 = ctx.createGain(); g1.gain.value = 0.5;
-    const g2 = ctx.createGain(); g2.gain.value = 0.32;
-    const g3 = ctx.createGain(); g3.gain.value = 0.14;
-    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
-    g1.connect(ef); g2.connect(ef); g3.connect(ef);
-    /* intake air noise */
+    const osc2 = ctx.createOscillator(); osc2.type = "square"; osc2.frequency.value = 35; osc2.detune.value = 5;
+    const osc3 = ctx.createOscillator(); osc3.type = "sawtooth"; osc3.frequency.value = 141; osc3.detune.value = -7;
+    const osc4 = ctx.createOscillator(); osc4.type = "sine"; osc4.frequency.value = 17.5;
+    const g1 = ctx.createGain(); g1.gain.value = 0.44;
+    const g2 = ctx.createGain(); g2.gain.value = 0.3;
+    const g3 = ctx.createGain(); g3.gain.value = 0.16;
+    const g4 = ctx.createGain(); g4.gain.value = 0.55;
+    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3); osc4.connect(g4);
+    g1.connect(ef); g2.connect(ef); g3.connect(ef); g4.connect(ef);
+    ef.connect(shaper); shaper.connect(eg); eg.connect(master);
+    /* admissão */
     const air = ctx.createBufferSource(); air.buffer = AUDIO.noiseBuffer; air.loop = true;
-    const airF = ctx.createBiquadFilter(); airF.type = "bandpass"; airF.frequency.value = 900; airF.Q.value = 0.8;
+    const airF = ctx.createBiquadFilter(); airF.type = "bandpass"; airF.frequency.value = 900; airF.Q.value = 0.9;
     const airG = ctx.createGain(); airG.gain.value = 0;
     air.connect(airF); airF.connect(airG); airG.connect(eg);
-    ef.connect(eg); eg.connect(master);
-    osc1.start(); osc2.start(); osc3.start(); air.start();
+    /* turbo (só nos carros com biturbo) */
+    const turbo = ctx.createOscillator(); turbo.type = "sine"; turbo.frequency.value = 2600;
+    const turboG = ctx.createGain(); turboG.gain.value = 0;
+    turbo.connect(turboG); turboG.connect(eg);
+    /* escape: ruído grave com passa-banda */
+    const exh = ctx.createBufferSource(); exh.buffer = AUDIO.noiseBuffer; exh.loop = true;
+    const exhF = ctx.createBiquadFilter(); exhF.type = "bandpass"; exhF.frequency.value = 320; exhF.Q.value = 1.1;
+    const exhG = ctx.createGain(); exhG.gain.value = 0;
+    exh.connect(exhF); exhF.connect(exhG); exhG.connect(eg);
+    osc1.start(); osc2.start(); osc3.start(); osc4.start(); air.start(); turbo.start(); exh.start();
 
     /* --- wind --- */
     const wn = ctx.createBufferSource(); wn.buffer = AUDIO.noiseBuffer; wn.loop = true;
@@ -1686,7 +1718,7 @@ function initAudio() {
     const ag = ctx.createGain(); ag.gain.value = 0.05;
     an.connect(af); af.connect(ag); ag.connect(master); an.start();
 
-    AUDIO.engine = { gain: eg, filter: ef, osc1, osc2, osc3, g1, g2, g3, airG, airF };
+    AUDIO.engine = { gain: eg, filter: ef, osc1, osc2, osc3, osc4, g1, g2, g3, g4, shaper, airG, airF, turbo, turboG, exhG, exhF };
     AUDIO.wind = { gain: wg, filter: wf };
     AUDIO.tires = { gain: tg, filter: tf };
     AUDIO.rain = { gain: rg };
@@ -1719,31 +1751,55 @@ function applyAudioSettings() {
 /* rpm / throttle → engine timbre */
 function updateEngineAudio(dt) {
   if (!AUDIO.ctx || !AUDIO.engine) return;
+  const eng = AUDIO.engine;
+  const t = AUDIO.ctx.currentTime;
   if (!state.settings.engine || state.muted || !state.playing) {
-    AUDIO.engine.gain.gain.setTargetAtTime(0.0001, AUDIO.ctx.currentTime, 0.12);
-    AUDIO.wind.gain.gain.setTargetAtTime(0, AUDIO.ctx.currentTime, 0.15);
-    AUDIO.tires.gain.gain.setTargetAtTime(0, AUDIO.ctx.currentTime, 0.1);
+    eng.gain.gain.setTargetAtTime(0.0001, t, 0.12);
+    AUDIO.wind.gain.gain.setTargetAtTime(0, t, 0.15);
+    AUDIO.tires.gain.gain.setTargetAtTime(0, t, 0.1);
     return;
   }
-  const t = AUDIO.ctx.currentTime;
   const spec = CARS[state.car];
   const snd = spec.sound;
-  const rpmNorm = clamp((state.rpm - snd.idle) / (snd.redline - snd.idle), 0, 1.15);
-  const f = 26 + rpmNorm * 132 + (snd.style === "jeep" ? -4 : 0);
-  AUDIO.engine.osc1.frequency.setTargetAtTime(f, t, 0.055);
-  AUDIO.engine.osc2.frequency.setTargetAtTime(f * 0.5, t, 0.06);
-  AUDIO.engine.osc3.frequency.setTargetAtTime(f * 2.02, t, 0.05);
-  const open = 0.16 + state.throttle * 0.62 + rpmNorm * 0.24;
-  AUDIO.engine.filter.frequency.setTargetAtTime(340 + rpmNorm * 2100 + state.throttle * 500, t, 0.08);
-  AUDIO.engine.airG.gain.setTargetAtTime(0.05 + state.throttle * 0.16, t, 0.09);
-  const level = (0.035 + state.throttle * 0.05 + rpmNorm * 0.032) * (0.7 + open * 0.5) * (spec.sound.loud || 0.7);
-  AUDIO.engine.gain.gain.setTargetAtTime(level, t, 0.07);
+  const rpm = Math.max(snd.idle, state.rpm || snd.idle);
+  const rpmNorm = clamp((rpm - snd.idle) / (snd.redline - snd.idle), 0, 1.2);
+  const throttle = clamp(state.throttle || 0, 0, 1);
+  const load = clamp(throttle * 0.75 + rpmNorm * 0.45, 0, 1);
+
+  /* frequência de combustão: 4 cilindros ≈ rpm/30, 6 ≈ rpm/20 */
+  const cyl = snd.style === "flat6" ? 20 : snd.style === "boxer" ? 28 : 32;
+  const f = clamp(rpm / cyl, 22, 210);
+  const scoop = snd.style === "flat6" ? 1.12 : snd.style === "jeep" ? 0.92 : 1;
+  eng.osc1.frequency.setTargetAtTime(f * scoop, t, 0.035);
+  eng.osc2.frequency.setTargetAtTime(f * 0.5 * scoop, t, 0.04);
+  eng.osc3.frequency.setTargetAtTime(f * 2.02 * scoop, t, 0.03);
+  eng.osc4.frequency.setTargetAtTime(f * 0.25, t, 0.05);
+  eng.filter.frequency.setTargetAtTime(360 + rpmNorm * 2400 + throttle * 900, t, 0.05);
+  eng.filter.Q.setTargetAtTime(2.4 + throttle * 3.2, t, 0.1);
+  eng.airG.gain.setTargetAtTime(0.02 + throttle * 0.13 + rpmNorm * 0.03, t, 0.07);
+  eng.airF.frequency.setTargetAtTime(620 + rpmNorm * 1500, t, 0.12);
+  /* escape: mais grave e encorpado */
+  eng.exhG.gain.setTargetAtTime(0.02 + load * 0.07, t, 0.08);
+  eng.exhF.frequency.setTargetAtTime(180 + rpmNorm * 420, t, 0.15);
+  /* turbo assobiando só no biturbo */
+  if (snd.style === "flat6") {
+    eng.turbo.frequency.setTargetAtTime(1900 + rpmNorm * 3400, t, 0.08);
+    eng.turboG.gain.setTargetAtTime(state.throttle > 0.35 ? 0.004 + rpmNorm * 0.01 : 0, t, 0.12);
+  }
+
+  const level = (0.05 + throttle * 0.085 + rpmNorm * 0.05) * (snd.loud || 0.7);
+  eng.gain.gain.setTargetAtTime(level, t, 0.05);
+
+  /* estouro no corte de giro */
+  if (throttle < 0.08 && rpmNorm > 0.42 && Math.random() < 0.05) {
+    noiseBurst(0.05, 0.05, 900 + Math.random() * 900, 0.9);
+  }
 
   const sp = Math.abs(state.speed) * 3.6;
-  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
-  AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.5, t, 0.2);
+  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.08, (sp / 240) * 0.07), t, 0.2);
+  AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.2, t, 0.2);
   const slip = state.slip || 0;
-  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
+  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.085, 0, 0.11), t, 0.07);
   AUDIO.tires.filter.frequency.setTargetAtTime(1700 + slip * 900, t, 0.1);
 }
 
@@ -2724,14 +2780,14 @@ function makeSurfaceTextures() {
   /* asphalt */
   {
     const c = cv(128, 128), x = c.getContext("2d");
-    x.fillStyle = "#4c5254"; x.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 2600; i++) {
-      const v = rndInt(50, 105);
-      x.fillStyle = "rgba(" + v + "," + v + "," + (v + 2) + "," + rnd(0.25, 0.7) + ")";
+    x.fillStyle = "#90959a"; x.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 2200; i++) {
+      const v = rndInt(105, 165);
+      x.fillStyle = "rgba(" + v + "," + v + "," + (v + 2) + "," + rnd(0.12, 0.4) + ")";
       x.fillRect(rnd(128), rnd(128), rnd(1, 2.4), rnd(1, 2.4));
     }
     for (let i = 0; i < 12; i++) {
-      x.strokeStyle = "rgba(30,32,34,.25)"; x.lineWidth = rnd(0.5, 1.4);
+      x.strokeStyle = "rgba(60,64,66,.18)"; x.lineWidth = rnd(0.5, 1.4);
       x.beginPath(); x.moveTo(rnd(128), 0); x.lineTo(rnd(128), 128); x.stroke();
     }
     TEXCACHE.asphalt = tex(c);
@@ -3007,10 +3063,21 @@ function onResize() {
   if (typeof resizeShowroom === "function") resizeShowroom();
 }
 
+function detectQuality() {
+  const cores = navigator.hardwareConcurrency || 4;
+  const mem = navigator.deviceMemory || 4;
+  const ua = navigator.userAgent || "";
+  if (/Android|iPhone|iPad|Mobile|Macintosh.*Safari(?!.*Chrome)/i.test(ua)) return "low";
+  if (cores <= 4 || mem <= 4) return "low";
+  if (cores <= 8 || mem <= 8) return "balanced";
+  return "high";
+}
+
 function setQuality(q) {
+  if (q === "auto") q = detectQuality();
   WORLD.quality = q;
   if (!renderer) return;
-  const ratio = q === "high" ? 1.7 : q === "balanced" ? 1.15 : 0.8;
+  const ratio = q === "high" ? 1.6 : q === "balanced" ? 1.05 : 0.85;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, ratio));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.shadowMap.enabled = !!state.settings.shadows && q !== "low";
@@ -3020,7 +3087,7 @@ function setQuality(q) {
     sunLight.shadow.mapSize.set(size, size);
     if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
   }
-  state.viewDist = state.settings.view === "far" ? 2400 : state.settings.view === "mid" ? 1700 : 1100;
+  state.viewDist = q === "low" ? 900 : state.settings.view === "far" ? 2400 : state.settings.view === "mid" ? 1700 : 1100;
   updateSkyLight();
   if (typeof buildCityDistant === "function") buildCityDistant();
 }
@@ -3181,9 +3248,9 @@ const ROAD_DRIVABLE = {
   unclassified: 1, residential: 1, living_street: 1, service: 1
 };
 const ROAD_COLOR = {
-  motorway: 0x24282b, trunk: 0x26292c, primary: 0x282c2f, secondary: 0x2a2e31,
-  tertiary: 0x2c3033, residential: 0x2e3235, unclassified: 0x2c3033,
-  living_street: 0x32363a, service: 0x313538, pedestrian: 0x55554f, footway: 0x6a6a63
+  motorway: 0x868c90, trunk: 0x888e92, primary: 0x8a9094, secondary: 0x8c9296,
+  tertiary: 0x8e9498, residential: 0x90969a, unclassified: 0x8e9498,
+  living_street: 0x92989c, service: 0x91979b, pedestrian: 0x9a9a91, footway: 0xa2a29a
 };
 
 let CITY = {
@@ -3407,10 +3474,13 @@ function pickSpawnPoint() {
 function ensureClearSpawn(force) {
   if (!state.blockers) return false;
   const blocked = blockersNear(state.blockers, state.x, state.z, 2.6).length > 0;
-  if (!force && !blocked) return false;
-  const rp = (force ? pickSpawnPoint() : null) || nearestRoadPoint(state.x, state.z);
+  const here = nearestRoadPoint(state.x, state.z);
+  /* longe do asfalto (praça, dentro de prédio, meio do mato) também conta como spawn inválido */
+  const offRoad = !here || here.dist > 7;
+  if (!force && !blocked && !offRoad) return false;
+  const rp = (force || offRoad ? pickSpawnPoint() : null) || nearestRoadPoint(state.x, state.z);
   if (!rp) return false;
-  if (!force && rp.dist > 900) return false;
+  if (!force && !offRoad && rp.dist > 900) return false;
   state.x = rp.x;
   state.z = rp.z;
   if (force && Number.isFinite(rp.yaw)) state.yaw = rp.yaw;
@@ -3667,20 +3737,40 @@ function buildCityFromOSM(elements, district) {
     roofMesh.castShadow = true; roofMesh.receiveShadow = true;
     root.add(roofMesh);
   }
+  /* todas as faixas de asfalto são planos horizontais: normal para cima garante luz do sol */
+  /* UV plana em coordenadas de mundo: sem isso o piso inteiro amostra um único texel (preto) */
+  const planarUV = (g, scale) => {
+    if (!g || !g.attributes.position) return g;
+    const p = g.attributes.position;
+    const arr = new Float32Array(p.count * 2);
+    for (let i = 0; i < p.count; i++) {
+      arr[i * 2] = p.getX(i) / scale;
+      arr[i * 2 + 1] = p.getZ(i) / scale;
+    }
+    g.setAttribute("uv", new THREE.BufferAttribute(arr, 2));
+    return g;
+  };
+  const normalsUp = (g) => {
+    if (!g || !g.attributes.normal) return g;
+    const n = g.attributes.normal;
+    for (let i = 0; i < n.count; i++) n.setXYZ(i, 0, 1, 0);
+    n.needsUpdate = true;
+    return g;
+  };
   for (const type in roadBatches) {
-    const g = batchToGeometry(roadBatches[type]);
+    const g = planarUV(normalsUp(batchToGeometry(roadBatches[type])), 9);
     if (!g) continue;
     const mesh = new THREE.Mesh(g, asphaltMaterial(type));
     mesh.receiveShadow = true;
     root.add(mesh);
   }
-  const walkG = batchToGeometry(walkBatch);
+  const walkG = planarUV(normalsUp(batchToGeometry(walkBatch)), 7);
   if (walkG) {
     const wm = new THREE.Mesh(walkG, CITY.sidewalkMat);
     wm.receiveShadow = true;
     root.add(wm);
   }
-  const markG = batchToGeometry(markBatch);
+  const markG = planarUV(normalsUp(batchToGeometry(markBatch)), 9);
   if (markG) {
     const mm = new THREE.Mesh(markG, new THREE.MeshStandardMaterial({
       color: 0xe8e6d6, roughness: 0.8, metalness: 0,
@@ -3755,6 +3845,8 @@ function buildCityFromOSM(elements, district) {
   buildDistantSkyline();
   buildLandmarks(district);
   placePlayer(roads);
+  /* só agora os blockers existem: garante spawn em asfalto livre, fora de praças e marcos */
+  ensureClearSpawn(true);
   if (typeof buildNavGraph === "function") buildNavGraph();
   if (typeof renderMapBase === "function") renderMapBase();
   return { roads: roadCount, buildings: buildingCount };
@@ -4085,7 +4177,6 @@ function buildFallbackCity(district) {
 
   state.roads = roads;
   state.roadPaths = roads.map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
-  ensureClearSpawn(true);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = [];
@@ -4100,6 +4191,8 @@ function buildFallbackCity(district) {
   buildDistantSkyline();
   buildLandmarks(district, true);
   placePlayer(roads);
+  /* só agora os blockers existem: garante spawn em asfalto livre, fora de praças e marcos */
+  ensureClearSpawn(true);
   if (typeof buildNavGraph === "function") buildNavGraph();
   if (typeof renderMapBase === "function") renderMapBase();
   return { roads: roads.length, buildings: buildings.length };
@@ -4717,6 +4810,20 @@ state.player = null;
 state.slip = 0;
 state.viewDist = 2400;
 
+function snapCamera() {
+  const g = PLAYER.model;
+  if (!g) return;
+  const root = g.root;
+  const back = state.camera === "first" ? -0.15 : 6.4;
+  const up = state.camera === "first" ? 1.12 : 2.5;
+  camera.position.set(
+    root.position.x + Math.sin(state.yaw) * back,
+    up,
+    root.position.z + Math.cos(state.yaw) * back
+  );
+  camera.lookAt(root.position.x, 1.1, root.position.z);
+}
+
 function spawnPlayerModel() {
   if (typeof ensureClearSpawn === "function") ensureClearSpawn(!PLAYER.model);
   if (PLAYER.group) {
@@ -4734,6 +4841,7 @@ function spawnPlayerModel() {
   PLAYER.bodyPitch = 0;
   state.player = { x: state.x, z: state.z };
   applyCameraMode(true);
+  snapCamera();
   updateCarHUD();
 }
 
@@ -6301,415 +6409,384 @@ function setupBigMap() {
 
 /* ---------- 10-radio.js ---------- */
 /* ============================================================
-   SAMPA DRIVER · 10 · rádio (YouTube, Piped, stream direto)
+   SAMPA DRIVER · 10 · rádio própria (música eletrônica sintetizada)
+   Nenhum link, nenhum streaming: o som é gerado no WebAudio.
    ============================================================ */
-const RADIO = {
-  audio: null, yt: null, ytApi: false, ytPending: false, mode: null,
-  volume: 0.72, titleTimer: 0, vizPhase: 0, energy: 0
-};
-const PIPED_HOSTS = [
-  "https://pipedapi.kavin.rocks",
-  "https://pipedapi.adminforge.de",
-  "https://pipedapi.reallyaweso.me",
-  "https://pipedapi.drgns.space"
+
+const STATIONS = [
+  {
+    id: "sampa-house",
+    name: "SAMPA HOUSE",
+    genre: "deep house · 124 BPM",
+    bpm: 124,
+    kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0],
+    bass: [40, 0, 0, 40, 0, 0, 43, 0, 38, 0, 0, 40, 0, 0, 45, 0],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    arp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    padEvery: 32
+  },
+  {
+    id: "techno-011",
+    name: "TECHNO 011",
+    genre: "techno · 132 BPM",
+    bpm: 132,
+    kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+    hat: [1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1],
+    bass: [33, 0, 33, 0, 0, 33, 0, 0, 33, 0, 33, 0, 0, 33, 0, 33],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    arp: [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1],
+    padEvery: 16
+  },
+  {
+    id: "eletro-brasil",
+    name: "ELETRO BRASIL",
+    genre: "brazilian electro · 112 BPM",
+    bpm: 112,
+    kick: [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+    clap: [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
+    hat: [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1],
+    bass: [38, 0, 0, 41, 0, 43, 0, 0, 38, 0, 0, 45, 0, 41, 0, 0],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    arp: [1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+    padEvery: 32
+  },
+  {
+    id: "lofi-paulista",
+    name: "LO-FI PAULISTA",
+    genre: "lo-fi · 82 BPM",
+    bpm: 82,
+    kick: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    hat: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+    bass: [36, 0, 0, 0, 0, 0, 41, 0, 0, 0, 43, 0, 0, 0, 39, 0],
+    chord: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    arp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    padEvery: 16,
+    vinyl: true
+  }
 ];
 
-function initRadio() {
-  state.radio.volume = clamp(Number(state.settings.music) || 0.72, 0, 1);
-  RADIO.audio = new Audio();
-  RADIO.audio.preload = "none";
-  RADIO.audio.volume = state.radio.volume;
-  RADIO.audio.addEventListener("ended", () => { if (state.radio.queue.length) radioNext(); });
-  RADIO.audio.addEventListener("error", () => {
-    if (state.radio.mode === "audio") setRadioStatus("Não consegui abrir este áudio — tente outro link", "err");
-  });
-  RADIO.audio.addEventListener("playing", () => { state.radio.playing = true; updateRadioUI(); });
-  RADIO.audio.addEventListener("pause", () => { state.radio.playing = false; updateRadioUI(); });
-  assignRange($("#radio-volume"), state.settings.music * 100);
-  assignRange($("#set-music"), state.settings.music * 100);
-}
+const RADIO = {
+  ctx: null, out: null, analyser: null, data: null, delay: null,
+  timer: 0, nextTime: 0, step: 0, bar: 0,
+  station: 0, playing: false, volume: 0.72, started: false,
+  energy: 0, vizPhase: 0, titleTimer: 0, mode: null,
+  noise: null
+};
 
-function assignRange(el, value) {
-  if (!el) return;
-  el.value = value;
-  const pct = (value - el.min) / (el.max - el.min) * 100;
-  el.style.setProperty("--p", pct + "%");
-}
-
-/* ---------- utils ---------- */
-function parsePlaylist(url) {
+/* ---------- helpers de síntese ---------- */
+function radioCtx() {
+  if (RADIO.ctx) return RADIO.ctx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
   try {
-    const u = new URL(url.trim());
-    const list = u.searchParams.get("list");
-    const v = u.searchParams.get("v");
-    let host = u.hostname.replace(/^www\./, "");
-    if (host === "youtu.be") return { kind: "video", id: u.pathname.slice(1), host: "youtube.com" };
-    if (/youtube|youtu\.be/.test(host)) {
-      if (list) return { kind: "playlist", id: list, host: "youtube.com" };
-      if (v) return { kind: "video", id: v, host: "youtube.com" };
-      const m = u.pathname.match(/\/(?:embed|shorts)\/([\w-]{6,})/);
-      if (m) return { kind: "video", id: m[1], host: "youtube.com" };
-      return { kind: "unknown", id: "", host };
-    }
-    if (/piped|invidious|yewtu\.be|nitter/.test(host)) {
-      if (list) return { kind: "playlist", id: list, host };
-      if (v) return { kind: "video", id: v, host };
-    }
-    if (/\.(mp3|ogg|wav|m4a|aac|opus|flac)(\?|$)/i.test(url) || /stream|radio|icecast|zeno|somafm/i.test(url)) {
-      return { kind: "audio", id: url, host: "stream" };
-    }
-    return { kind: "unknown", id: "", host };
+    const ctx = new AC();
+    RADIO.ctx = ctx;
+    const out = ctx.createGain();
+    out.gain.value = RADIO.volume;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 128;
+    analyser.smoothingTimeConstant = 0.72;
+    out.connect(analyser);
+    analyser.connect(ctx.destination);
+    RADIO.out = out;
+    RADIO.analyser = analyser;
+    RADIO.data = new Uint8Array(analyser.frequencyBinCount);
+    /* delay para dar espaço ao lead */
+    const delay = ctx.createDelay(1.2);
+    delay.delayTime.value = 0.34;
+    const fb = ctx.createGain(); fb.gain.value = 0.3;
+    const wet = ctx.createGain(); wet.gain.value = 0.28;
+    delay.connect(fb); fb.connect(delay);
+    delay.connect(wet); wet.connect(out);
+    RADIO.delay = delay;
+    /* buffer de ruído reaproveitado */
+    const len = Math.floor(ctx.sampleRate * 1.2);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    RADIO.noise = buf;
+    return ctx;
   } catch (e) {
-    return { kind: "unknown", id: "", host: "" };
+    console.warn("rádio indisponível:", e && e.message);
+    return null;
   }
 }
 
-function setRadioStatus(text, kind) {
-  state.radio.status = kind || "idle";
-  const el = $("#radio-status");
-  if (el) {
-    el.className = "radio-status" + (kind === "live" ? " live" : kind === "err" ? " err" : "");
-    const span = el.querySelector("span");
-    if (span) span.textContent = text;
-  }
-}
-function setRadioMeta(title, sub) {
-  state.radio.title = title;
-  state.radio.sub = sub;
-  updateRadioUI();
+const midiHz = (n) => 440 * Math.pow(2, (n - 69) / 12);
+
+function envGain(ctx, at, peak, attack, decay) {
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), at + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay);
+  return g;
 }
 
-/* ---------- YouTube ---------- */
-function ensureYouTubeApi() {
-  return new Promise((resolve) => {
-    if (window.YT && window.YT.Player) { RADIO.ytApi = true; return resolve(true); }
-    let done = false;
-    const finish = (ok) => { if (done) return; done = true; RADIO.ytApi = ok; resolve(ok); };
-    window.onYouTubeIframeAPIReady = () => finish(true);
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    tag.onerror = () => finish(false);
-    document.head.appendChild(tag);
-    setTimeout(() => finish(false), 14000);
+function rKick(ctx, at, gain) {
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(155, at);
+  o.frequency.exponentialRampToValueAtTime(46, at + 0.12);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.34);
+  o.connect(g); g.connect(RADIO.out);
+  o.start(at); o.stop(at + 0.4);
+  /* click de ataque */
+  const n = ctx.createBufferSource(); n.buffer = RADIO.noise;
+  const nf = ctx.createBiquadFilter(); nf.type = "bandpass"; nf.frequency.value = 1800;
+  const ng = envGain(ctx, at, gain * 0.22, 0.002, 0.03);
+  n.connect(nf); nf.connect(ng); ng.connect(RADIO.out);
+  n.start(at); n.stop(at + 0.06);
+}
+
+function rNoise(ctx, at, gain, type, freq, q, dur) {
+  const n = ctx.createBufferSource();
+  n.buffer = RADIO.noise;
+  const f = ctx.createBiquadFilter();
+  f.type = type; f.frequency.value = freq; f.Q.value = q || 1;
+  const g = envGain(ctx, at, gain, 0.002, dur);
+  n.connect(f); f.connect(g); g.connect(RADIO.out);
+  n.start(at); n.stop(at + dur + 0.1);
+}
+
+function rBass(ctx, at, note, dur, gain) {
+  const o = ctx.createOscillator();
+  const o2 = ctx.createOscillator();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  o.type = "sawtooth"; o2.type = "square";
+  o.frequency.value = midiHz(note);
+  o2.frequency.value = midiHz(note - 12);
+  f.type = "lowpass";
+  f.frequency.setValueAtTime(320, at);
+  f.frequency.exponentialRampToValueAtTime(150, at + dur);
+  f.Q.value = 6;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(f); o2.connect(f); f.connect(g); g.connect(RADIO.out);
+  o.start(at); o.stop(at + dur + 0.05);
+  o2.start(at); o2.stop(at + dur + 0.05);
+}
+
+function rChord(ctx, at, notes, dur, gain) {
+  const f = ctx.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.setValueAtTime(900, at);
+  f.frequency.linearRampToValueAtTime(1750, at + dur * 0.5);
+  f.frequency.linearRampToValueAtTime(700, at + dur);
+  f.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(gain, at + Math.min(0.35, dur * 0.35));
+  g.gain.linearRampToValueAtTime(0.0001, at + dur);
+  f.connect(g);
+  g.connect(RADIO.out);
+  if (RADIO.delay) g.connect(RADIO.delay);
+  notes.forEach((n, i) => {
+    const o = ctx.createOscillator();
+    o.type = i === 0 ? "triangle" : "sawtooth";
+    o.frequency.value = midiHz(n);
+    o.detune.value = (i - 1) * 7;
+    o.connect(f);
+    o.start(at); o.stop(at + dur + 0.1);
   });
 }
 
-async function startYouTube(info) {
-  const ok = await ensureYouTubeApi();
-  if (!ok) {
-    setRadioStatus("YouTube bloqueado neste navegador — use Piped ou link direto", "err");
-    playClick("err");
-    return false;
+function rLead(ctx, at, note, dur, gain) {
+  const o = ctx.createOscillator();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  o.type = "triangle";
+  o.frequency.value = midiHz(note);
+  f.type = "lowpass"; f.frequency.value = 2600; f.Q.value = 3;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(f); f.connect(g); g.connect(RADIO.out);
+  if (RADIO.delay) g.connect(RADIO.delay);
+  o.start(at); o.stop(at + dur + 0.05);
+}
+
+/* progressões (ré menor / lá menor, conforme a estação) */
+const PROGRESSIONS = [
+  [[50, 53, 57, 60], [48, 52, 55, 59], [46, 50, 53, 57], [48, 52, 55, 58]],
+  [[45, 48, 52, 55], [43, 46, 50, 53], [41, 45, 48, 52], [43, 46, 50, 53]],
+  [[43, 47, 50, 53], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 54]],
+  [[48, 52, 55, 59], [45, 48, 52, 55], [50, 53, 57, 60], [43, 47, 50, 53]]
+];
+
+/* ---------- sequenciador ---------- */
+function scheduleStep(st, when, step, bar) {
+  const ctx = RADIO.ctx;
+  const s = step % 16;
+  const st16 = 60 / st.bpm / 4;
+  if (st.kick[s]) rKick(ctx, when, 0.85);
+  if (st.clap[s]) rNoise(ctx, when, 0.22, "bandpass", 1900, 1.4, 0.12);
+  if (st.hat[s]) rNoise(ctx, when, s % 4 === 0 ? 0.1 : 0.055, "highpass", 8200, 0.7, 0.035);
+  if (st.bass[s]) rBass(ctx, when, st.bass[s], st16 * 2.1, 0.16);
+  if (st.arp[s]) rLead(ctx, when, st.arp === null ? 0 : (PROGRESSIONS[RADIO.station][bar % 4][(s + 1) % 4] + 12), st16 * 1.4, 0.06);
+  if (st.chord[s]) {
+    const ch = PROGRESSIONS[RADIO.station][bar % 4];
+    rChord(ctx, when, ch, st16 * 14, 0.075);
   }
-  const args = {
-    height: "200", width: "200",
-    playerVars: {
-      autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1,
-      origin: location.origin
-    },
-    events: {
-      onReady: (ev) => {
-        try { ev.target.setVolume(Math.round(state.radio.volume * 100)); } catch (e) {}
-        try { ev.target.playVideo(); } catch (e) {}
-        setRadioStatus("YouTube conectado · só o áudio", "live");
-      },
-      onStateChange: (ev) => {
-        const st = ev.data;
-        state.radio.playing = st === 1;
-        if (st === 1) {
-          setRadioStatus("Tocando no player do YouTube", "live");
-          pollYouTubeTitle();
-        }
-        if (st === 3) setRadioStatus("Carregando faixa…", "idle");
-        if (st === 0 && state.radio.queue.length) radioNext();
-        updateRadioUI();
-      },
-      onError: () => { setRadioStatus("O YouTube recusou esta playlist (pode ser privada ou bloqueada)", "err"); }
-    }
-  };
-  if (info.kind === "video") args.videoId = info.id;
-  else {
-    args.playerVars.list = info.id;
-    args.playerVars.listType = "playlist";
+  if (step % st.padEvery === 0) {
+    const ch = PROGRESSIONS[RADIO.station][bar % 4];
+    rChord(ctx, when, ch.map((n) => n + 12), st16 * st.padEvery * 0.95, 0.035);
   }
-  try {
-    if (RADIO.yt && RADIO.yt.destroy) RADIO.yt.destroy();
-    RADIO.yt = new window.YT.Player("yt", args);
-  } catch (err) {
-    setRadioStatus("Não foi possível criar o player do YouTube", "err");
-    return false;
+  if (st.vinyl && step % 4 === 0) rNoise(ctx, when, 0.012, "lowpass", 2400, 0.6, 0.3);
+}
+
+function radioTick() {
+  if (!RADIO.playing || !RADIO.ctx) return;
+  const st = STATIONS[RADIO.station];
+  const stepDur = 60 / st.bpm / 4;
+  const now = RADIO.ctx.currentTime;
+  if (RADIO.nextTime < now) RADIO.nextTime = now + 0.05;
+  while (RADIO.nextTime < now + 0.18) {
+    if (RADIO.step % 16 === 0) RADIO.bar++;
+    scheduleStep(st, RADIO.nextTime, RADIO.step, RADIO.bar);
+    RADIO.step++;
+    RADIO.nextTime += stepDur;
   }
-  RADIO.mode = "youtube";
-  state.radio.mode = "youtube";
-  state.radio.type = info.kind;
-  setRadioMeta(info.kind === "playlist" ? "Playlist do YouTube" : "Vídeo do YouTube", "Áudio do player oficial");
+}
+
+/* ---------- API ---------- */
+function radioStation() { return STATIONS[RADIO.station]; }
+
+function radioPlay() {
+  const ctx = radioCtx();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  if (RADIO.playing) return true;
+  RADIO.playing = true;
+  RADIO.mode = "synth";
+  RADIO.nextTime = ctx.currentTime + 0.08;
+  RADIO.step = 0;
+  RADIO.bar = 0;
+  if (!RADIO.timer) RADIO.timer = setInterval(radioTick, 25);
+  state.radio.playing = true;
+  updateRadioUI();
   return true;
 }
 
-function pollYouTubeTitle() {
-  if (!RADIO.yt || !RADIO.yt.getVideoData) return;
-  try {
-    const data = RADIO.yt.getVideoData();
-    if (data && data.title) {
-      const author = RADIO.yt.getVideoData().author || "YouTube";
-      setRadioMeta(data.title, "YouTube · " + author);
-    }
-  } catch (e) {}
-}
-
-/* ---------- Piped / Invidious ---------- */
-async function pipedFetch(path, timeout) {
-  for (const host of PIPED_HOSTS) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeout || 9000);
-    try {
-      const res = await fetch(host + path, { signal: ctrl.signal });
-      clearTimeout(t);
-      if (!res.ok) continue;
-      const json = await res.json();
-      return { json, host };
-    } catch (e) {
-      clearTimeout(t);
-    }
-  }
-  return null;
-}
-
-async function startPiped(info) {
-  setRadioStatus("Consultando uma instância Piped…", "idle");
-  if (info.kind === "playlist") {
-    setRadioStatus("Buscando a playlist no Piped…", "idle");
-    const result = await pipedFetch("/playlists/" + encodeURIComponent(info.id), 12000);
-    if (!result || !result.json) {
-      setRadioStatus("Nenhuma instância Piped respondeu — tente novamente ou use link direto", "err");
-      playClick("err");
-      return false;
-    }
-    const rows = result.json.relatedStreams || result.json.items || [];
-    state.radio.queue = rows.map((r) => ({
-      id: (r.url || r.link || "").split("v=")[1] || (r.url || "").split("/").pop(),
-      title: r.title || "Faixa"
-    })).filter((r) => r.id && r.id.length > 3).slice(0, 60);
-    if (!state.radio.queue.length) {
-      setRadioStatus("Playlist vazia ou não pública", "err");
-      return false;
-    }
-    state.radio.index = 0;
-    setRadioMeta(result.json.name || "Playlist Piped", result.host.replace("https://", ""));
-    RADIO.mode = "piped";
-    state.radio.mode = "piped";
-    return await playPipedTrack(0);
-  }
-  state.radio.queue = [{ id: info.id, title: info.id }];
-  RADIO.mode = "piped";
-  state.radio.mode = "piped";
-  return await playPipedTrack(0);
-}
-
-async function playPipedTrack(index) {
-  const queue = state.radio.queue;
-  if (!queue.length) return false;
-  index = (index + queue.length) % queue.length;
-  state.radio.index = index;
-  const track = queue[index];
-  setRadioStatus("Abrindo áudio…", "idle");
-  setRadioMeta(track.title || "Faixa " + (index + 1), "Piped · " + (index + 1) + " de " + queue.length);
-  const result = await pipedFetch("/streams/" + encodeURIComponent(track.id), 11000);
-  if (!result || !result.json) {
-    setRadioStatus("Piped não retornou o áudio desta faixa", "err");
-    return false;
-  }
-  const streams = (result.json.audioStreams || []).filter((s) => s.url);
-  streams.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
-  if (!streams.length) {
-    setRadioStatus("Faixa sem áudio disponível", "err");
-    return false;
-  }
-  const url = streams[0].url;
-  return await playAudioUrl(url, track.title, "Piped · " + (index + 1) + " de " + queue.length);
-}
-
-/* ---------- direct ---------- */
-async function playAudioUrl(url, title, sub) {
-  if (!RADIO.audio) return false;
-  try {
-    RADIO.audio.src = url;
-    RADIO.audio.volume = state.radio.volume;
-    await RADIO.audio.play();
-    RADIO.mode = "audio";
-    state.radio.mode = "audio";
-    state.radio.playing = true;
-    setRadioMeta(title || "Stream de áudio", sub || "Link direto");
-    setRadioStatus("Tocando áudio", "live");
-    updateRadioUI();
-    return true;
-  } catch (err) {
-    setRadioStatus("O navegador bloqueou ou recusou o áudio — clique em tocar", "err");
-    state.radio.playing = false;
-    updateRadioUI();
-    return false;
-  }
-}
-
-/* ---------- connect / controls ---------- */
-async function connectRadio() {
-  audioResume();
-  const input = $("#radio-url");
-  const url = (input && input.value ? input.value : state.radio.url || "").trim();
-  if (!url) {
-    setRadioStatus("Cole o link de uma playlist, vídeo ou stream", "err");
-    toast("Cole um link para conectar a rádio", "warn");
-    playClick("err");
-    return;
-  }
-  state.radio.url = url;
-  const source = state.radio.source;
-  const info = parsePlaylist(url);
-  stopRadioPlayback(true);
-  setRadioStatus("Conectando…", "idle");
-  setRadioMeta("Conectando…", source.toUpperCase());
-  playClick("tick");
-
-  if (source === "direct" || info.kind === "audio") {
-    if (info.kind === "unknown" && source === "direct") {
-      await playAudioUrl(url, decodeURIComponent((url.split("/").pop() || "Stream").slice(0, 60)), "Link direto");
-      return;
-    }
-    const title = decodeURIComponent((url.split("/").pop() || "Stream").split("?")[0]).slice(0, 60) || "Stream de áudio";
-    await playAudioUrl(url, title, "Link direto");
-    return;
-  }
-
-  if (info.kind === "unknown") {
-    setRadioStatus("Não reconheci este link. Confira o formato.", "err");
-    playClick("err");
-    return;
-  }
-  if (info.kind === "playlist" && !info.id) {
-    setRadioStatus("Playlist inválida", "err");
-    return;
-  }
-
-  if (source === "piped") {
-    await startPiped(info);
-    return;
-  }
-  if (info.host === "youtube.com" || source === "youtube") {
-    if (info.host !== "youtube.com") {
-      setRadioStatus("Esse link não é do YouTube — tentando pelo Piped", "idle");
-      await startPiped(info);
-      return;
-    }
-    const ok = await startYouTube(info);
-    if (!ok) {
-      setRadioStatus("Tentando o Piped como alternativa…", "idle");
-      await startPiped(info);
-    }
-    return;
-  }
-  await startPiped(info);
-}
-
-function stopRadioPlayback(silent) {
-  if (RADIO.audio) {
-    RADIO.audio.pause();
-    RADIO.audio.removeAttribute("src");
-    RADIO.audio.load();
-  }
-  if (RADIO.yt && RADIO.yt.stopVideo) {
-    try { RADIO.yt.stopVideo(); } catch (e) {}
-  }
+function radioStop() {
+  RADIO.playing = false;
   state.radio.playing = false;
-  if (!silent) {
-    state.radio.title = "Rádio desligada";
-    state.radio.sub = "Conecte uma playlist";
-    updateRadioUI();
-    setRadioStatus("Rádio desligada", "idle");
-  }
-}
-
-function radioToggle() {
-  audioResume();
-  if (state.radio.playing) {
-    if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.pauseVideo) RADIO.yt.pauseVideo();
-    else if (RADIO.audio) RADIO.audio.pause();
-    state.radio.playing = false;
-    updateRadioUI();
-    return;
-  }
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.playVideo) {
-    RADIO.yt.playVideo();
-    state.radio.playing = true;
-  } else if (RADIO.audio && RADIO.audio.src) {
-    RADIO.audio.play().then(() => { state.radio.playing = true; updateRadioUI(); }).catch(() => toast("Clique para liberar o áudio", "warn"));
-  } else {
-    const url = ($("#radio-url") && $("#radio-url").value) || state.radio.url;
-    if (url) connectRadio();
-    else { showPage("radio"); toast("Cole um link de playlist para começar"); }
-  }
+  if (RADIO.timer) { clearInterval(RADIO.timer); RADIO.timer = 0; }
   updateRadioUI();
 }
 
-function radioNext() {
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.nextVideo) {
-    try { RADIO.yt.nextVideo(); return; } catch (e) {}
-  }
-  if (state.radio.queue.length) playPipedTrack(state.radio.index + 1);
+function radioToggle() {
+  if (RADIO.playing) radioStop(); else { audioResume(); radioPlay(); }
+  playClick("tick");
 }
+
+function connectRadio() { audioResume(); radioPlay(); }
+
+function radioNext() {
+  RADIO.station = (RADIO.station + 1) % STATIONS.length;
+  state.radio.station = RADIO.station;
+  if (RADIO.playing) { RADIO.step = 0; RADIO.bar = 0; RADIO.nextTime = RADIO.ctx ? RADIO.ctx.currentTime + 0.05 : 0; }
+  updateRadioUI();
+  toast(radioStation().name + " · " + radioStation().genre, "ok");
+  playClick("tick");
+}
+
 function radioPrev() {
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.previousVideo) {
-    try { RADIO.yt.previousVideo(); return; } catch (e) {}
-  }
-  if (state.radio.queue.length) playPipedTrack(state.radio.index - 1);
+  RADIO.station = (RADIO.station + STATIONS.length - 1) % STATIONS.length;
+  state.radio.station = RADIO.station;
+  if (RADIO.playing) { RADIO.step = 0; RADIO.bar = 0; RADIO.nextTime = RADIO.ctx ? RADIO.ctx.currentTime + 0.05 : 0; }
+  updateRadioUI();
+  toast(radioStation().name + " · " + radioStation().genre, "ok");
+  playClick("tick");
+}
+
+function radioSelect(index) {
+  if (index === RADIO.station && RADIO.playing) { radioToggle(); return; }
+  RADIO.station = clamp(index, 0, STATIONS.length - 1);
+  state.radio.station = RADIO.station;
+  RADIO.step = 0; RADIO.bar = 0;
+  if (RADIO.ctx) RADIO.nextTime = RADIO.ctx.currentTime + 0.05;
+  audioResume();
+  radioPlay();
+  playClick("tick");
 }
 
 function radioVolume(value) {
-  state.radio.volume = clamp(value, 0, 1);
-  state.settings.music = state.radio.volume;
-  if (RADIO.audio) RADIO.audio.volume = state.radio.volume;
-  if (RADIO.yt && RADIO.yt.setVolume) { try { RADIO.yt.setVolume(Math.round(state.radio.volume * 100)); } catch (e) {} }
-  assignRange($("#radio-volume"), state.radio.volume * 100);
-  assignRange($("#set-music"), state.radio.volume * 100);
-  const label = $("#radio-volume-label");
-  if (label) label.textContent = String(Math.round(state.radio.volume * 100));
-  saveGame();
+  RADIO.volume = clamp(value, 0, 1);
+  state.radio.volume = RADIO.volume;
+  if (RADIO.out) RADIO.out.gain.setTargetAtTime(RADIO.volume, RADIO.ctx.currentTime, 0.05);
+  updateRadioVolumeUI();
 }
 
-/* ---------- UI ---------- */
-const ICON_PLAY = "#i-play", ICON_PAUSE = "#i-pause";
-function setIcon(btn, href) {
-  if (!btn) return;
-  const use = btn.querySelector("use");
-  if (use) use.setAttribute("href", href);
-}
-function updateRadioUI() {
-  const title = state.radio.title || "Nada tocando";
-  const sub = state.radio.sub || "Conecte uma playlist para começar";
-  const t1 = $("#radio-title"); if (t1) t1.textContent = title;
-  const t2 = $("#radio-sub"); if (t2) t2.textContent = sub;
-  const t3 = $("#hud-track"); if (t3) t3.textContent = state.radio.playing ? title : (state.radio.title && state.radio.title !== "Nada tocando" ? "Pausado · " + title : "Rádio desligado");
-  const t4 = $("#hud-radio-sub"); if (t4) t4.textContent = sub;
-  const home = $("#home-radio-title"); if (home) home.textContent = state.radio.playing ? title : "Desligada";
-  const homeSub = $("#home-radio-sub"); if (homeSub) homeSub.textContent = sub;
-  setIcon($("#radio-play"), state.radio.playing ? ICON_PAUSE : ICON_PLAY);
-  setIcon($("#hud-radio-play"), state.radio.playing ? ICON_PAUSE : ICON_PLAY);
-  const eqs = $$(".mini-eq");
-  eqs.forEach((e) => e.classList.toggle("live", state.radio.playing));
-  const cover = $("#radio-cover");
-  if (cover) cover.classList.toggle("spin", state.radio.playing);
-  const label = $("#radio-source-label");
-  if (label) {
-    label.textContent = state.radio.source === "piped" ? "PIPED · PLAYER PESSOAL" : state.radio.source === "direct" ? "STREAM · PLAYER PESSOAL" : "SAMPA FM · YOUTUBE";
-  }
-}
 function updateRadioVolumeUI() {
-  assignRange($("#radio-volume"), state.radio.volume * 100);
-  assignRange($("#set-music"), state.radio.volume * 100);
+  const v = Math.round(RADIO.volume * 100);
   const label = $("#radio-volume-label");
-  if (label) label.textContent = String(Math.round(state.radio.volume * 100));
+  if (label) label.textContent = String(v);
+  const slider = $("#radio-volume");
+  if (slider && String(slider.value) !== String(v)) slider.value = String(v);
+  const hud = $("#hud-radio-vol");
+  if (hud) hud.textContent = v + "%";
 }
 
-/* ---------- visualiser ---------- */
+function updateRadioUI() {
+  const st = radioStation();
+  const title = $("#radio-title");
+  if (title) title.textContent = RADIO.playing ? st.name : "Rádio desligada";
+  const sub = $("#radio-sub");
+  if (sub) sub.textContent = RADIO.playing ? st.genre + " · gerado ao vivo" : "Escolha uma estação para tocar";
+  const label = $("#radio-source-label");
+  if (label) label.textContent = "SAMPA FM · ESTAÇÕES DO JOGO";
+  const hudTitle = $("#hud-radio-title");
+  if (hudTitle) hudTitle.textContent = RADIO.playing ? st.name : "Rádio desligada";
+  const hudTrack = $("#hud-track");
+  if (hudTrack) hudTrack.textContent = RADIO.playing ? st.name : "Rádio desligado";
+  const hudEq = $("#hud-eq");
+  if (hudEq) hudEq.classList.toggle("playing", RADIO.playing);
+  const hudSub = $("#hud-radio-sub");
+  if (hudSub) hudSub.textContent = RADIO.playing ? st.genre : "Toque para sintonizar";
+  const homeTitle = $("#home-radio-title");
+  if (homeTitle) homeTitle.textContent = RADIO.playing ? st.name : "Desligado";
+  const homeSub = $("#home-radio-sub");
+  if (homeSub) homeSub.textContent = RADIO.playing ? st.genre : "4 estações de música eletrônica";
+  const eq = $("#home-eq");
+  if (eq) eq.classList.toggle("playing", RADIO.playing);
+  const status = $("#radio-status");
+  if (status) {
+    const tag = status.querySelector("b") || status.querySelector("span");
+    if (tag) tag.textContent = RADIO.playing ? "no ar" : "parada";
+    status.classList.toggle("on", RADIO.playing);
+  }
+  $$("#radio-stations .station").forEach((card, i) => {
+    card.classList.toggle("active", i === RADIO.station);
+    card.classList.toggle("playing", i === RADIO.station && RADIO.playing);
+  });
+  const playIcon = $("#radio-play");
+  if (playIcon) playIcon.classList.toggle("paused", !RADIO.playing);
+}
+
+function initRadio() {
+  RADIO.volume = clamp(state.settings.music !== undefined ? state.settings.music : 0.72, 0, 1);
+  state.radio.volume = RADIO.volume;
+  state.radio.playing = false;
+  state.radio.mode = null;
+  updateRadioUI();
+  updateRadioVolumeUI();
+}
+
+/* mantido por compatibilidade: nada é baixado da internet */
+function pollYouTubeTitle() {}
+function startPiped() {}
+function playAudioUrl() {}
+
+/* ---------- visualizador ---------- */
 function drawRadioViz(dt) {
   const canvas = $("#radio-viz");
   if (!canvas || !canvas.getContext) return;
@@ -6724,39 +6801,43 @@ function drawRadioViz(dt) {
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cw, ch);
-  RADIO.vizPhase += dt * (state.radio.playing ? 3.4 : 0.7);
-  RADIO.energy = damp(RADIO.energy, state.radio.playing ? 1 : 0.34, 2.4, dt);
-  const bars = Math.max(24, Math.min(64, Math.floor(cw / 11)));
+
+  let bins = null;
+  if (RADIO.analyser && RADIO.playing) {
+    RADIO.analyser.getByteFrequencyData(RADIO.data);
+    bins = RADIO.data;
+  }
+  RADIO.vizPhase += dt * (RADIO.playing ? 2.6 : 0.5);
+  const bars = Math.max(20, Math.min(56, Math.floor(cw / 12)));
   const base = ch * 0.9;
   const unit = cw / bars;
   for (let i = 0; i < bars; i++) {
-    const p = i / bars;
-    const wave =
-      Math.abs(Math.sin(p * 7.3 + RADIO.vizPhase * 1.6)) * 0.42 +
-      Math.abs(Math.sin(p * 17.7 + RADIO.vizPhase * 0.85)) * 0.3 +
-      Math.abs(Math.sin(p * 3.1 - RADIO.vizPhase * 2.2)) * 0.28;
-    const env = Math.sin(p * Math.PI) * 0.75 + 0.25;
-    const h = (5 + wave * env * ch * 0.52) * RADIO.energy;
+    let level;
+    if (bins) {
+      const idx = Math.floor(Math.pow(i / bars, 1.4) * (bins.length - 1));
+      level = bins[idx] / 255;
+    } else {
+      level = 0.06 + Math.abs(Math.sin(i * 0.4 + RADIO.vizPhase)) * 0.05;
+    }
+    const h = Math.max(3, Math.pow(level, 1.15) * ch * 0.72 + 3);
     const x = i * unit + unit * 0.22;
     const w = unit * 0.56;
     const g = ctx.createLinearGradient(0, base - h, 0, base);
     g.addColorStop(0, "rgba(211,251,104,.95)");
-    g.addColorStop(0.55, "rgba(160,240,190,.65)");
-    g.addColorStop(1, "rgba(121,230,221,.18)");
+    g.addColorStop(0.55, "rgba(160,240,190,.7)");
+    g.addColorStop(1, "rgba(121,230,221,.22)");
     ctx.fillStyle = g;
     roundRect(ctx, x, base - h, w, h, Math.min(w / 2, 3));
     ctx.fill();
-    /* reflection */
-    ctx.globalAlpha = 0.14;
-    const g2 = ctx.createLinearGradient(0, base, 0, base + h * 0.5);
-    g2.addColorStop(0, "rgba(121,230,221,.55)");
+    ctx.globalAlpha = 0.13;
+    const g2 = ctx.createLinearGradient(0, base, 0, base + h * 0.45);
+    g2.addColorStop(0, "rgba(121,230,221,.6)");
     g2.addColorStop(1, "rgba(121,230,221,0)");
     ctx.fillStyle = g2;
-    roundRect(ctx, x, base, w, h * 0.5, Math.min(w / 2, 3));
+    roundRect(ctx, x, base, w, h * 0.45, Math.min(w / 2, 3));
     ctx.fill();
     ctx.globalAlpha = 1;
   }
-  /* baseline */
   ctx.beginPath();
   ctx.moveTo(0, base + 0.5);
   ctx.lineTo(cw, base + 0.5);
@@ -7093,57 +7174,44 @@ function setupSettings() {
   });
 }
 
+/* ---------- sliders ---------- */
+function assignRange(el, value) {
+  if (!el) return;
+  el.value = value;
+  const min = Number(el.min || 0), max = Number(el.max || 100);
+  const pct = max > min ? ((Number(value) - min) / (max - min)) * 100 : 0;
+  el.style.setProperty("--p", Math.max(0, Math.min(100, pct)).toFixed(1) + "%");
+}
+
 /* ---------- radio wiring ---------- */
 function setupRadioUI() {
-  $$("#radio-tabs .tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      state.radio.source = tab.dataset.src;
-      $$("#radio-tabs .tab").forEach((t) => t.classList.toggle("active", t === tab));
-      const label = $("#radio-url-label");
-      const input = $("#radio-url");
-      if (label) label.textContent = tab.dataset.src === "youtube" ? "LINK DA PLAYLIST DO YOUTUBE" : tab.dataset.src === "piped" ? "LINK DA PLAYLIST NO PIPED / YOUTUBE" : "LINK DIRETO DE ÁUDIO";
-      if (input) input.placeholder = tab.dataset.src === "direct" ? "https://…/musica.mp3 ou stream" : "https://www.youtube.com/playlist?list=…";
-      const hint = $("#radio-hint");
-      if (hint) hint.textContent = tab.dataset.src === "youtube"
-        ? "O player oficial do YouTube fica escondido atrás do jogo e só o áudio toca na cabine. Playlists privadas não funcionam."
-        : tab.dataset.src === "piped"
-          ? "O jogo consulta uma instância pública do Piped para extrair o áudio. Algumas instâncias podem estar fora do ar a qualquer momento."
-          : "Aceita MP3, OGG, M4A ou URLs de rádio (streams). Precisa de CORS liberado para tocar dentro do jogo.";
-      updateRadioUI();
-      playClick("tick");
+  const wrap = $("#radio-stations");
+  if (wrap) {
+    wrap.innerHTML = "";
+    STATIONS.forEach((st, i) => {
+      const card = document.createElement("button");
+      card.className = "station";
+      card.dataset.index = i;
+      card.innerHTML =
+        '<span class="st-eq"><i></i><i></i><i></i><i></i></span>' +
+        "<div><b>" + st.name + "</b><small>" + st.genre + "</small></div>" +
+        '<span class="st-play"><svg class="ico sm"><use href="#i-play"/></svg></span>';
+      card.addEventListener("click", () => { radioSelect(i); });
+      wrap.appendChild(card);
     });
-  });
-  const connect = $("#radio-connect");
-  if (connect) connect.addEventListener("click", connectRadio);
-  const url = $("#radio-url");
-  if (url) {
-    url.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); connectRadio(); } });
-    url.value = state.radio.url || "";
   }
   const play = $("#radio-play");
-  if (play) play.addEventListener("click", () => { audioResume(); if (!state.radio.mode) connectRadio(); else radioToggle(); });
+  if (play) play.addEventListener("click", () => { audioResume(); if (!state.radio.playing) radioPlay(); else radioToggle(); });
   const next = $("#radio-next"), prev = $("#radio-prev");
   if (next) next.addEventListener("click", radioNext);
   if (prev) prev.addEventListener("click", radioPrev);
   const vol = $("#radio-volume");
   if (vol) vol.addEventListener("input", () => radioVolume(Number(vol.value) / 100));
   const hudPlay = $("#hud-radio-play");
-  if (hudPlay) hudPlay.addEventListener("click", () => { audioResume(); if (!state.radio.mode) connectRadio(); else radioToggle(); });
+  if (hudPlay) hudPlay.addEventListener("click", () => { audioResume(); radioToggle(); });
   const hudNext = $("#hud-radio-next"), hudPrev = $("#hud-radio-prev");
   if (hudNext) hudNext.addEventListener("click", radioNext);
   if (hudPrev) hudPrev.addEventListener("click", radioPrev);
-  $$(".preset").forEach((p) => {
-    p.addEventListener("click", () => {
-      const type = p.dataset.preset;
-      const target = $(`#radio-tabs .tab[data-src="${type}"]`);
-      if (target) target.click();
-      const input = $("#radio-url");
-      if (input) input.value = p.dataset.url;
-      state.radio.source = type;
-      state.radio.url = p.dataset.url;
-      connectRadio();
-    });
-  });
   updateRadioVolumeUI();
 }
 
@@ -7320,20 +7388,31 @@ function animateLoop() {
     const so = $("#stat-odo");
     if (so) so.textContent = state.odometer.toFixed(1) + " KM";
   }
-  if (RADIO.mode === "youtube" && state.radio.playing && performance.now() - RADIO.titleTimer > 2400) {
-    RADIO.titleTimer = performance.now();
-    pollYouTubeTitle();
-  }
 
   /* keep canvas sizes in sync */
   fpsAcc += dt; fpsFrames++;
-  if (fpsAcc > 1) { state.fps = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0; }
+  if (fpsAcc > 1) {
+    state.fps = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0;
+    /* vigia de desempenho: se o PC não segurar 40 fps, cai para o modo leve */
+    if (state.playing && !state.menu) {
+      if (state.fps < 40) state.slow = (state.slow || 0) + 1; else state.slow = 0;
+      if (state.slow >= 4 && WORLD.quality !== "low") {
+        state.slow = 0;
+        state.settings.quality = "low";
+        if (state.settings.traffic !== "off") state.settings.traffic = "low";
+        setQuality("low");
+        if (typeof buildTraffic === "function") buildTraffic(state.settings.traffic);
+        if (typeof toast === "function") toast("Modo leve ativado para rodar liso");
+      }
+    }
+  }
 }
 
 /* ============================================================
    BOOT
    ============================================================ */
 function bootStep(pct, message) {
+  (state.bootTimes = state.bootTimes || []).push([message, Math.round(performance.now())]);
   const fill = $("#boot-fill");
   if (fill) fill.style.width = pct + "%";
   const p = $("#boot-percent");
@@ -7402,11 +7481,12 @@ async function boot() {
     $("#hud").classList.remove("active");
 
     clock.getDelta();
+    /* o primeiro frame compila os shaders: libera o menu antes, para o boot não parecer travado */
+    $("#boot").classList.add("done");
+    setTimeout(() => { const b = $("#boot"); if (b) b.style.display = "none"; }, 700);
     animateLoop();
 
     bootStep(100, "Tudo pronto. Bom rolê!");
-    $("#boot").classList.add("done");
-    setTimeout(() => { const b = $("#boot"); if (b) b.style.display = "none"; }, 900);
     toast("Bem-vindo a São Paulo. Escolha seu carro e caia na rua.", "ok");
     playClick("ok");
 
@@ -7451,6 +7531,9 @@ window.SAMPA = {
   get scene() { return scene; },
   get renderer() { return renderer; },
   get player() { return PLAYER; },
+  get radioAnalyser() { return RADIO.analyser; },
+  get audioCtx() { return AUDIO.ctx; },
+  get engineAudio() { return AUDIO.engine; },
   get traffic() { return TRAFFIC; },
   get route() { return state.route; }
 };

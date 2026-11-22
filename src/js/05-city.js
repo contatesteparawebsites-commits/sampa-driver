@@ -14,9 +14,9 @@ const ROAD_DRIVABLE = {
   unclassified: 1, residential: 1, living_street: 1, service: 1
 };
 const ROAD_COLOR = {
-  motorway: 0x24282b, trunk: 0x26292c, primary: 0x282c2f, secondary: 0x2a2e31,
-  tertiary: 0x2c3033, residential: 0x2e3235, unclassified: 0x2c3033,
-  living_street: 0x32363a, service: 0x313538, pedestrian: 0x55554f, footway: 0x6a6a63
+  motorway: 0x868c90, trunk: 0x888e92, primary: 0x8a9094, secondary: 0x8c9296,
+  tertiary: 0x8e9498, residential: 0x90969a, unclassified: 0x8e9498,
+  living_street: 0x92989c, service: 0x91979b, pedestrian: 0x9a9a91, footway: 0xa2a29a
 };
 
 let CITY = {
@@ -240,10 +240,13 @@ function pickSpawnPoint() {
 function ensureClearSpawn(force) {
   if (!state.blockers) return false;
   const blocked = blockersNear(state.blockers, state.x, state.z, 2.6).length > 0;
-  if (!force && !blocked) return false;
-  const rp = (force ? pickSpawnPoint() : null) || nearestRoadPoint(state.x, state.z);
+  const here = nearestRoadPoint(state.x, state.z);
+  /* longe do asfalto (praça, dentro de prédio, meio do mato) também conta como spawn inválido */
+  const offRoad = !here || here.dist > 7;
+  if (!force && !blocked && !offRoad) return false;
+  const rp = (force || offRoad ? pickSpawnPoint() : null) || nearestRoadPoint(state.x, state.z);
   if (!rp) return false;
-  if (!force && rp.dist > 900) return false;
+  if (!force && !offRoad && rp.dist > 900) return false;
   state.x = rp.x;
   state.z = rp.z;
   if (force && Number.isFinite(rp.yaw)) state.yaw = rp.yaw;
@@ -500,20 +503,40 @@ function buildCityFromOSM(elements, district) {
     roofMesh.castShadow = true; roofMesh.receiveShadow = true;
     root.add(roofMesh);
   }
+  /* todas as faixas de asfalto são planos horizontais: normal para cima garante luz do sol */
+  /* UV plana em coordenadas de mundo: sem isso o piso inteiro amostra um único texel (preto) */
+  const planarUV = (g, scale) => {
+    if (!g || !g.attributes.position) return g;
+    const p = g.attributes.position;
+    const arr = new Float32Array(p.count * 2);
+    for (let i = 0; i < p.count; i++) {
+      arr[i * 2] = p.getX(i) / scale;
+      arr[i * 2 + 1] = p.getZ(i) / scale;
+    }
+    g.setAttribute("uv", new THREE.BufferAttribute(arr, 2));
+    return g;
+  };
+  const normalsUp = (g) => {
+    if (!g || !g.attributes.normal) return g;
+    const n = g.attributes.normal;
+    for (let i = 0; i < n.count; i++) n.setXYZ(i, 0, 1, 0);
+    n.needsUpdate = true;
+    return g;
+  };
   for (const type in roadBatches) {
-    const g = batchToGeometry(roadBatches[type]);
+    const g = planarUV(normalsUp(batchToGeometry(roadBatches[type])), 9);
     if (!g) continue;
     const mesh = new THREE.Mesh(g, asphaltMaterial(type));
     mesh.receiveShadow = true;
     root.add(mesh);
   }
-  const walkG = batchToGeometry(walkBatch);
+  const walkG = planarUV(normalsUp(batchToGeometry(walkBatch)), 7);
   if (walkG) {
     const wm = new THREE.Mesh(walkG, CITY.sidewalkMat);
     wm.receiveShadow = true;
     root.add(wm);
   }
-  const markG = batchToGeometry(markBatch);
+  const markG = planarUV(normalsUp(batchToGeometry(markBatch)), 9);
   if (markG) {
     const mm = new THREE.Mesh(markG, new THREE.MeshStandardMaterial({
       color: 0xe8e6d6, roughness: 0.8, metalness: 0,
@@ -588,6 +611,8 @@ function buildCityFromOSM(elements, district) {
   buildDistantSkyline();
   buildLandmarks(district);
   placePlayer(roads);
+  /* só agora os blockers existem: garante spawn em asfalto livre, fora de praças e marcos */
+  ensureClearSpawn(true);
   if (typeof buildNavGraph === "function") buildNavGraph();
   if (typeof renderMapBase === "function") renderMapBase();
   return { roads: roadCount, buildings: buildingCount };
@@ -918,7 +943,6 @@ function buildFallbackCity(district) {
 
   state.roads = roads;
   state.roadPaths = roads.map((r) => r.pts.map((p) => ({ x: p.x, z: p.z, w: r.width })));
-  ensureClearSpawn(true);
   state.buildings = buildings;
   state.parks = parks;
   state.waters = [];
@@ -933,6 +957,8 @@ function buildFallbackCity(district) {
   buildDistantSkyline();
   buildLandmarks(district, true);
   placePlayer(roads);
+  /* só agora os blockers existem: garante spawn em asfalto livre, fora de praças e marcos */
+  ensureClearSpawn(true);
   if (typeof buildNavGraph === "function") buildNavGraph();
   if (typeof renderMapBase === "function") renderMapBase();
   return { roads: roads.length, buildings: buildings.length };

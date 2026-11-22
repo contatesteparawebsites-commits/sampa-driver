@@ -324,57 +324,44 @@ function setupSettings() {
   });
 }
 
+/* ---------- sliders ---------- */
+function assignRange(el, value) {
+  if (!el) return;
+  el.value = value;
+  const min = Number(el.min || 0), max = Number(el.max || 100);
+  const pct = max > min ? ((Number(value) - min) / (max - min)) * 100 : 0;
+  el.style.setProperty("--p", Math.max(0, Math.min(100, pct)).toFixed(1) + "%");
+}
+
 /* ---------- radio wiring ---------- */
 function setupRadioUI() {
-  $$("#radio-tabs .tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      state.radio.source = tab.dataset.src;
-      $$("#radio-tabs .tab").forEach((t) => t.classList.toggle("active", t === tab));
-      const label = $("#radio-url-label");
-      const input = $("#radio-url");
-      if (label) label.textContent = tab.dataset.src === "youtube" ? "LINK DA PLAYLIST DO YOUTUBE" : tab.dataset.src === "piped" ? "LINK DA PLAYLIST NO PIPED / YOUTUBE" : "LINK DIRETO DE ÁUDIO";
-      if (input) input.placeholder = tab.dataset.src === "direct" ? "https://…/musica.mp3 ou stream" : "https://www.youtube.com/playlist?list=…";
-      const hint = $("#radio-hint");
-      if (hint) hint.textContent = tab.dataset.src === "youtube"
-        ? "O player oficial do YouTube fica escondido atrás do jogo e só o áudio toca na cabine. Playlists privadas não funcionam."
-        : tab.dataset.src === "piped"
-          ? "O jogo consulta uma instância pública do Piped para extrair o áudio. Algumas instâncias podem estar fora do ar a qualquer momento."
-          : "Aceita MP3, OGG, M4A ou URLs de rádio (streams). Precisa de CORS liberado para tocar dentro do jogo.";
-      updateRadioUI();
-      playClick("tick");
+  const wrap = $("#radio-stations");
+  if (wrap) {
+    wrap.innerHTML = "";
+    STATIONS.forEach((st, i) => {
+      const card = document.createElement("button");
+      card.className = "station";
+      card.dataset.index = i;
+      card.innerHTML =
+        '<span class="st-eq"><i></i><i></i><i></i><i></i></span>' +
+        "<div><b>" + st.name + "</b><small>" + st.genre + "</small></div>" +
+        '<span class="st-play"><svg class="ico sm"><use href="#i-play"/></svg></span>';
+      card.addEventListener("click", () => { radioSelect(i); });
+      wrap.appendChild(card);
     });
-  });
-  const connect = $("#radio-connect");
-  if (connect) connect.addEventListener("click", connectRadio);
-  const url = $("#radio-url");
-  if (url) {
-    url.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); connectRadio(); } });
-    url.value = state.radio.url || "";
   }
   const play = $("#radio-play");
-  if (play) play.addEventListener("click", () => { audioResume(); if (!state.radio.mode) connectRadio(); else radioToggle(); });
+  if (play) play.addEventListener("click", () => { audioResume(); if (!state.radio.playing) radioPlay(); else radioToggle(); });
   const next = $("#radio-next"), prev = $("#radio-prev");
   if (next) next.addEventListener("click", radioNext);
   if (prev) prev.addEventListener("click", radioPrev);
   const vol = $("#radio-volume");
   if (vol) vol.addEventListener("input", () => radioVolume(Number(vol.value) / 100));
   const hudPlay = $("#hud-radio-play");
-  if (hudPlay) hudPlay.addEventListener("click", () => { audioResume(); if (!state.radio.mode) connectRadio(); else radioToggle(); });
+  if (hudPlay) hudPlay.addEventListener("click", () => { audioResume(); radioToggle(); });
   const hudNext = $("#hud-radio-next"), hudPrev = $("#hud-radio-prev");
   if (hudNext) hudNext.addEventListener("click", radioNext);
   if (hudPrev) hudPrev.addEventListener("click", radioPrev);
-  $$(".preset").forEach((p) => {
-    p.addEventListener("click", () => {
-      const type = p.dataset.preset;
-      const target = $(`#radio-tabs .tab[data-src="${type}"]`);
-      if (target) target.click();
-      const input = $("#radio-url");
-      if (input) input.value = p.dataset.url;
-      state.radio.source = type;
-      state.radio.url = p.dataset.url;
-      connectRadio();
-    });
-  });
   updateRadioVolumeUI();
 }
 
@@ -551,20 +538,31 @@ function animateLoop() {
     const so = $("#stat-odo");
     if (so) so.textContent = state.odometer.toFixed(1) + " KM";
   }
-  if (RADIO.mode === "youtube" && state.radio.playing && performance.now() - RADIO.titleTimer > 2400) {
-    RADIO.titleTimer = performance.now();
-    pollYouTubeTitle();
-  }
 
   /* keep canvas sizes in sync */
   fpsAcc += dt; fpsFrames++;
-  if (fpsAcc > 1) { state.fps = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0; }
+  if (fpsAcc > 1) {
+    state.fps = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0;
+    /* vigia de desempenho: se o PC não segurar 40 fps, cai para o modo leve */
+    if (state.playing && !state.menu) {
+      if (state.fps < 40) state.slow = (state.slow || 0) + 1; else state.slow = 0;
+      if (state.slow >= 4 && WORLD.quality !== "low") {
+        state.slow = 0;
+        state.settings.quality = "low";
+        if (state.settings.traffic !== "off") state.settings.traffic = "low";
+        setQuality("low");
+        if (typeof buildTraffic === "function") buildTraffic(state.settings.traffic);
+        if (typeof toast === "function") toast("Modo leve ativado para rodar liso");
+      }
+    }
+  }
 }
 
 /* ============================================================
    BOOT
    ============================================================ */
 function bootStep(pct, message) {
+  (state.bootTimes = state.bootTimes || []).push([message, Math.round(performance.now())]);
   const fill = $("#boot-fill");
   if (fill) fill.style.width = pct + "%";
   const p = $("#boot-percent");
@@ -633,11 +631,12 @@ async function boot() {
     $("#hud").classList.remove("active");
 
     clock.getDelta();
+    /* o primeiro frame compila os shaders: libera o menu antes, para o boot não parecer travado */
+    $("#boot").classList.add("done");
+    setTimeout(() => { const b = $("#boot"); if (b) b.style.display = "none"; }, 700);
     animateLoop();
 
     bootStep(100, "Tudo pronto. Bom rolê!");
-    $("#boot").classList.add("done");
-    setTimeout(() => { const b = $("#boot"); if (b) b.style.display = "none"; }, 900);
     toast("Bem-vindo a São Paulo. Escolha seu carro e caia na rua.", "ok");
     playClick("ok");
 
@@ -682,6 +681,9 @@ window.SAMPA = {
   get scene() { return scene; },
   get renderer() { return renderer; },
   get player() { return PLAYER; },
+  get radioAnalyser() { return RADIO.analyser; },
+  get audioCtx() { return AUDIO.ctx; },
+  get engineAudio() { return AUDIO.engine; },
   get traffic() { return TRAFFIC; },
   get route() { return state.route; }
 };

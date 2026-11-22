@@ -1,413 +1,382 @@
 /* ============================================================
-   SAMPA DRIVER · 10 · rádio (YouTube, Piped, stream direto)
+   SAMPA DRIVER · 10 · rádio própria (música eletrônica sintetizada)
+   Nenhum link, nenhum streaming: o som é gerado no WebAudio.
    ============================================================ */
-const RADIO = {
-  audio: null, yt: null, ytApi: false, ytPending: false, mode: null,
-  volume: 0.72, titleTimer: 0, vizPhase: 0, energy: 0
-};
-const PIPED_HOSTS = [
-  "https://pipedapi.kavin.rocks",
-  "https://pipedapi.adminforge.de",
-  "https://pipedapi.reallyaweso.me",
-  "https://pipedapi.drgns.space"
+
+const STATIONS = [
+  {
+    id: "sampa-house",
+    name: "SAMPA HOUSE",
+    genre: "deep house · 124 BPM",
+    bpm: 124,
+    kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0],
+    bass: [40, 0, 0, 40, 0, 0, 43, 0, 38, 0, 0, 40, 0, 0, 45, 0],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    arp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    padEvery: 32
+  },
+  {
+    id: "techno-011",
+    name: "TECHNO 011",
+    genre: "techno · 132 BPM",
+    bpm: 132,
+    kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+    hat: [1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1],
+    bass: [33, 0, 33, 0, 0, 33, 0, 0, 33, 0, 33, 0, 0, 33, 0, 33],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    arp: [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1],
+    padEvery: 16
+  },
+  {
+    id: "eletro-brasil",
+    name: "ELETRO BRASIL",
+    genre: "brazilian electro · 112 BPM",
+    bpm: 112,
+    kick: [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+    clap: [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
+    hat: [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1],
+    bass: [38, 0, 0, 41, 0, 43, 0, 0, 38, 0, 0, 45, 0, 41, 0, 0],
+    chord: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    arp: [1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+    padEvery: 32
+  },
+  {
+    id: "lofi-paulista",
+    name: "LO-FI PAULISTA",
+    genre: "lo-fi · 82 BPM",
+    bpm: 82,
+    kick: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    clap: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    hat: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+    bass: [36, 0, 0, 0, 0, 0, 41, 0, 0, 0, 43, 0, 0, 0, 39, 0],
+    chord: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    arp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    padEvery: 16,
+    vinyl: true
+  }
 ];
 
-function initRadio() {
-  state.radio.volume = clamp(Number(state.settings.music) || 0.72, 0, 1);
-  RADIO.audio = new Audio();
-  RADIO.audio.preload = "none";
-  RADIO.audio.volume = state.radio.volume;
-  RADIO.audio.addEventListener("ended", () => { if (state.radio.queue.length) radioNext(); });
-  RADIO.audio.addEventListener("error", () => {
-    if (state.radio.mode === "audio") setRadioStatus("Não consegui abrir este áudio — tente outro link", "err");
-  });
-  RADIO.audio.addEventListener("playing", () => { state.radio.playing = true; updateRadioUI(); });
-  RADIO.audio.addEventListener("pause", () => { state.radio.playing = false; updateRadioUI(); });
-  assignRange($("#radio-volume"), state.settings.music * 100);
-  assignRange($("#set-music"), state.settings.music * 100);
-}
+const RADIO = {
+  ctx: null, out: null, analyser: null, data: null, delay: null,
+  timer: 0, nextTime: 0, step: 0, bar: 0,
+  station: 0, playing: false, volume: 0.72, started: false,
+  energy: 0, vizPhase: 0, titleTimer: 0, mode: null,
+  noise: null
+};
 
-function assignRange(el, value) {
-  if (!el) return;
-  el.value = value;
-  const pct = (value - el.min) / (el.max - el.min) * 100;
-  el.style.setProperty("--p", pct + "%");
-}
-
-/* ---------- utils ---------- */
-function parsePlaylist(url) {
+/* ---------- helpers de síntese ---------- */
+function radioCtx() {
+  if (RADIO.ctx) return RADIO.ctx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
   try {
-    const u = new URL(url.trim());
-    const list = u.searchParams.get("list");
-    const v = u.searchParams.get("v");
-    let host = u.hostname.replace(/^www\./, "");
-    if (host === "youtu.be") return { kind: "video", id: u.pathname.slice(1), host: "youtube.com" };
-    if (/youtube|youtu\.be/.test(host)) {
-      if (list) return { kind: "playlist", id: list, host: "youtube.com" };
-      if (v) return { kind: "video", id: v, host: "youtube.com" };
-      const m = u.pathname.match(/\/(?:embed|shorts)\/([\w-]{6,})/);
-      if (m) return { kind: "video", id: m[1], host: "youtube.com" };
-      return { kind: "unknown", id: "", host };
-    }
-    if (/piped|invidious|yewtu\.be|nitter/.test(host)) {
-      if (list) return { kind: "playlist", id: list, host };
-      if (v) return { kind: "video", id: v, host };
-    }
-    if (/\.(mp3|ogg|wav|m4a|aac|opus|flac)(\?|$)/i.test(url) || /stream|radio|icecast|zeno|somafm/i.test(url)) {
-      return { kind: "audio", id: url, host: "stream" };
-    }
-    return { kind: "unknown", id: "", host };
+    const ctx = new AC();
+    RADIO.ctx = ctx;
+    const out = ctx.createGain();
+    out.gain.value = RADIO.volume;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 128;
+    analyser.smoothingTimeConstant = 0.72;
+    out.connect(analyser);
+    analyser.connect(ctx.destination);
+    RADIO.out = out;
+    RADIO.analyser = analyser;
+    RADIO.data = new Uint8Array(analyser.frequencyBinCount);
+    /* delay para dar espaço ao lead */
+    const delay = ctx.createDelay(1.2);
+    delay.delayTime.value = 0.34;
+    const fb = ctx.createGain(); fb.gain.value = 0.3;
+    const wet = ctx.createGain(); wet.gain.value = 0.28;
+    delay.connect(fb); fb.connect(delay);
+    delay.connect(wet); wet.connect(out);
+    RADIO.delay = delay;
+    /* buffer de ruído reaproveitado */
+    const len = Math.floor(ctx.sampleRate * 1.2);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    RADIO.noise = buf;
+    return ctx;
   } catch (e) {
-    return { kind: "unknown", id: "", host: "" };
+    console.warn("rádio indisponível:", e && e.message);
+    return null;
   }
 }
 
-function setRadioStatus(text, kind) {
-  state.radio.status = kind || "idle";
-  const el = $("#radio-status");
-  if (el) {
-    el.className = "radio-status" + (kind === "live" ? " live" : kind === "err" ? " err" : "");
-    const span = el.querySelector("span");
-    if (span) span.textContent = text;
-  }
-}
-function setRadioMeta(title, sub) {
-  state.radio.title = title;
-  state.radio.sub = sub;
-  updateRadioUI();
+const midiHz = (n) => 440 * Math.pow(2, (n - 69) / 12);
+
+function envGain(ctx, at, peak, attack, decay) {
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), at + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay);
+  return g;
 }
 
-/* ---------- YouTube ---------- */
-function ensureYouTubeApi() {
-  return new Promise((resolve) => {
-    if (window.YT && window.YT.Player) { RADIO.ytApi = true; return resolve(true); }
-    let done = false;
-    const finish = (ok) => { if (done) return; done = true; RADIO.ytApi = ok; resolve(ok); };
-    window.onYouTubeIframeAPIReady = () => finish(true);
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    tag.onerror = () => finish(false);
-    document.head.appendChild(tag);
-    setTimeout(() => finish(false), 14000);
+function rKick(ctx, at, gain) {
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(155, at);
+  o.frequency.exponentialRampToValueAtTime(46, at + 0.12);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.34);
+  o.connect(g); g.connect(RADIO.out);
+  o.start(at); o.stop(at + 0.4);
+  /* click de ataque */
+  const n = ctx.createBufferSource(); n.buffer = RADIO.noise;
+  const nf = ctx.createBiquadFilter(); nf.type = "bandpass"; nf.frequency.value = 1800;
+  const ng = envGain(ctx, at, gain * 0.22, 0.002, 0.03);
+  n.connect(nf); nf.connect(ng); ng.connect(RADIO.out);
+  n.start(at); n.stop(at + 0.06);
+}
+
+function rNoise(ctx, at, gain, type, freq, q, dur) {
+  const n = ctx.createBufferSource();
+  n.buffer = RADIO.noise;
+  const f = ctx.createBiquadFilter();
+  f.type = type; f.frequency.value = freq; f.Q.value = q || 1;
+  const g = envGain(ctx, at, gain, 0.002, dur);
+  n.connect(f); f.connect(g); g.connect(RADIO.out);
+  n.start(at); n.stop(at + dur + 0.1);
+}
+
+function rBass(ctx, at, note, dur, gain) {
+  const o = ctx.createOscillator();
+  const o2 = ctx.createOscillator();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  o.type = "sawtooth"; o2.type = "square";
+  o.frequency.value = midiHz(note);
+  o2.frequency.value = midiHz(note - 12);
+  f.type = "lowpass";
+  f.frequency.setValueAtTime(320, at);
+  f.frequency.exponentialRampToValueAtTime(150, at + dur);
+  f.Q.value = 6;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(f); o2.connect(f); f.connect(g); g.connect(RADIO.out);
+  o.start(at); o.stop(at + dur + 0.05);
+  o2.start(at); o2.stop(at + dur + 0.05);
+}
+
+function rChord(ctx, at, notes, dur, gain) {
+  const f = ctx.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.setValueAtTime(900, at);
+  f.frequency.linearRampToValueAtTime(1750, at + dur * 0.5);
+  f.frequency.linearRampToValueAtTime(700, at + dur);
+  f.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(gain, at + Math.min(0.35, dur * 0.35));
+  g.gain.linearRampToValueAtTime(0.0001, at + dur);
+  f.connect(g);
+  g.connect(RADIO.out);
+  if (RADIO.delay) g.connect(RADIO.delay);
+  notes.forEach((n, i) => {
+    const o = ctx.createOscillator();
+    o.type = i === 0 ? "triangle" : "sawtooth";
+    o.frequency.value = midiHz(n);
+    o.detune.value = (i - 1) * 7;
+    o.connect(f);
+    o.start(at); o.stop(at + dur + 0.1);
   });
 }
 
-async function startYouTube(info) {
-  const ok = await ensureYouTubeApi();
-  if (!ok) {
-    setRadioStatus("YouTube bloqueado neste navegador — use Piped ou link direto", "err");
-    playClick("err");
-    return false;
+function rLead(ctx, at, note, dur, gain) {
+  const o = ctx.createOscillator();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  o.type = "triangle";
+  o.frequency.value = midiHz(note);
+  f.type = "lowpass"; f.frequency.value = 2600; f.Q.value = 3;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(f); f.connect(g); g.connect(RADIO.out);
+  if (RADIO.delay) g.connect(RADIO.delay);
+  o.start(at); o.stop(at + dur + 0.05);
+}
+
+/* progressões (ré menor / lá menor, conforme a estação) */
+const PROGRESSIONS = [
+  [[50, 53, 57, 60], [48, 52, 55, 59], [46, 50, 53, 57], [48, 52, 55, 58]],
+  [[45, 48, 52, 55], [43, 46, 50, 53], [41, 45, 48, 52], [43, 46, 50, 53]],
+  [[43, 47, 50, 53], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 54]],
+  [[48, 52, 55, 59], [45, 48, 52, 55], [50, 53, 57, 60], [43, 47, 50, 53]]
+];
+
+/* ---------- sequenciador ---------- */
+function scheduleStep(st, when, step, bar) {
+  const ctx = RADIO.ctx;
+  const s = step % 16;
+  const st16 = 60 / st.bpm / 4;
+  if (st.kick[s]) rKick(ctx, when, 0.85);
+  if (st.clap[s]) rNoise(ctx, when, 0.22, "bandpass", 1900, 1.4, 0.12);
+  if (st.hat[s]) rNoise(ctx, when, s % 4 === 0 ? 0.1 : 0.055, "highpass", 8200, 0.7, 0.035);
+  if (st.bass[s]) rBass(ctx, when, st.bass[s], st16 * 2.1, 0.16);
+  if (st.arp[s]) rLead(ctx, when, st.arp === null ? 0 : (PROGRESSIONS[RADIO.station][bar % 4][(s + 1) % 4] + 12), st16 * 1.4, 0.06);
+  if (st.chord[s]) {
+    const ch = PROGRESSIONS[RADIO.station][bar % 4];
+    rChord(ctx, when, ch, st16 * 14, 0.075);
   }
-  const args = {
-    height: "200", width: "200",
-    playerVars: {
-      autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1,
-      origin: location.origin
-    },
-    events: {
-      onReady: (ev) => {
-        try { ev.target.setVolume(Math.round(state.radio.volume * 100)); } catch (e) {}
-        try { ev.target.playVideo(); } catch (e) {}
-        setRadioStatus("YouTube conectado · só o áudio", "live");
-      },
-      onStateChange: (ev) => {
-        const st = ev.data;
-        state.radio.playing = st === 1;
-        if (st === 1) {
-          setRadioStatus("Tocando no player do YouTube", "live");
-          pollYouTubeTitle();
-        }
-        if (st === 3) setRadioStatus("Carregando faixa…", "idle");
-        if (st === 0 && state.radio.queue.length) radioNext();
-        updateRadioUI();
-      },
-      onError: () => { setRadioStatus("O YouTube recusou esta playlist (pode ser privada ou bloqueada)", "err"); }
-    }
-  };
-  if (info.kind === "video") args.videoId = info.id;
-  else {
-    args.playerVars.list = info.id;
-    args.playerVars.listType = "playlist";
+  if (step % st.padEvery === 0) {
+    const ch = PROGRESSIONS[RADIO.station][bar % 4];
+    rChord(ctx, when, ch.map((n) => n + 12), st16 * st.padEvery * 0.95, 0.035);
   }
-  try {
-    if (RADIO.yt && RADIO.yt.destroy) RADIO.yt.destroy();
-    RADIO.yt = new window.YT.Player("yt", args);
-  } catch (err) {
-    setRadioStatus("Não foi possível criar o player do YouTube", "err");
-    return false;
+  if (st.vinyl && step % 4 === 0) rNoise(ctx, when, 0.012, "lowpass", 2400, 0.6, 0.3);
+}
+
+function radioTick() {
+  if (!RADIO.playing || !RADIO.ctx) return;
+  const st = STATIONS[RADIO.station];
+  const stepDur = 60 / st.bpm / 4;
+  const now = RADIO.ctx.currentTime;
+  if (RADIO.nextTime < now) RADIO.nextTime = now + 0.05;
+  while (RADIO.nextTime < now + 0.18) {
+    if (RADIO.step % 16 === 0) RADIO.bar++;
+    scheduleStep(st, RADIO.nextTime, RADIO.step, RADIO.bar);
+    RADIO.step++;
+    RADIO.nextTime += stepDur;
   }
-  RADIO.mode = "youtube";
-  state.radio.mode = "youtube";
-  state.radio.type = info.kind;
-  setRadioMeta(info.kind === "playlist" ? "Playlist do YouTube" : "Vídeo do YouTube", "Áudio do player oficial");
+}
+
+/* ---------- API ---------- */
+function radioStation() { return STATIONS[RADIO.station]; }
+
+function radioPlay() {
+  const ctx = radioCtx();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  if (RADIO.playing) return true;
+  RADIO.playing = true;
+  RADIO.mode = "synth";
+  RADIO.nextTime = ctx.currentTime + 0.08;
+  RADIO.step = 0;
+  RADIO.bar = 0;
+  if (!RADIO.timer) RADIO.timer = setInterval(radioTick, 25);
+  state.radio.playing = true;
+  updateRadioUI();
   return true;
 }
 
-function pollYouTubeTitle() {
-  if (!RADIO.yt || !RADIO.yt.getVideoData) return;
-  try {
-    const data = RADIO.yt.getVideoData();
-    if (data && data.title) {
-      const author = RADIO.yt.getVideoData().author || "YouTube";
-      setRadioMeta(data.title, "YouTube · " + author);
-    }
-  } catch (e) {}
-}
-
-/* ---------- Piped / Invidious ---------- */
-async function pipedFetch(path, timeout) {
-  for (const host of PIPED_HOSTS) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeout || 9000);
-    try {
-      const res = await fetch(host + path, { signal: ctrl.signal });
-      clearTimeout(t);
-      if (!res.ok) continue;
-      const json = await res.json();
-      return { json, host };
-    } catch (e) {
-      clearTimeout(t);
-    }
-  }
-  return null;
-}
-
-async function startPiped(info) {
-  setRadioStatus("Consultando uma instância Piped…", "idle");
-  if (info.kind === "playlist") {
-    setRadioStatus("Buscando a playlist no Piped…", "idle");
-    const result = await pipedFetch("/playlists/" + encodeURIComponent(info.id), 12000);
-    if (!result || !result.json) {
-      setRadioStatus("Nenhuma instância Piped respondeu — tente novamente ou use link direto", "err");
-      playClick("err");
-      return false;
-    }
-    const rows = result.json.relatedStreams || result.json.items || [];
-    state.radio.queue = rows.map((r) => ({
-      id: (r.url || r.link || "").split("v=")[1] || (r.url || "").split("/").pop(),
-      title: r.title || "Faixa"
-    })).filter((r) => r.id && r.id.length > 3).slice(0, 60);
-    if (!state.radio.queue.length) {
-      setRadioStatus("Playlist vazia ou não pública", "err");
-      return false;
-    }
-    state.radio.index = 0;
-    setRadioMeta(result.json.name || "Playlist Piped", result.host.replace("https://", ""));
-    RADIO.mode = "piped";
-    state.radio.mode = "piped";
-    return await playPipedTrack(0);
-  }
-  state.radio.queue = [{ id: info.id, title: info.id }];
-  RADIO.mode = "piped";
-  state.radio.mode = "piped";
-  return await playPipedTrack(0);
-}
-
-async function playPipedTrack(index) {
-  const queue = state.radio.queue;
-  if (!queue.length) return false;
-  index = (index + queue.length) % queue.length;
-  state.radio.index = index;
-  const track = queue[index];
-  setRadioStatus("Abrindo áudio…", "idle");
-  setRadioMeta(track.title || "Faixa " + (index + 1), "Piped · " + (index + 1) + " de " + queue.length);
-  const result = await pipedFetch("/streams/" + encodeURIComponent(track.id), 11000);
-  if (!result || !result.json) {
-    setRadioStatus("Piped não retornou o áudio desta faixa", "err");
-    return false;
-  }
-  const streams = (result.json.audioStreams || []).filter((s) => s.url);
-  streams.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
-  if (!streams.length) {
-    setRadioStatus("Faixa sem áudio disponível", "err");
-    return false;
-  }
-  const url = streams[0].url;
-  return await playAudioUrl(url, track.title, "Piped · " + (index + 1) + " de " + queue.length);
-}
-
-/* ---------- direct ---------- */
-async function playAudioUrl(url, title, sub) {
-  if (!RADIO.audio) return false;
-  try {
-    RADIO.audio.src = url;
-    RADIO.audio.volume = state.radio.volume;
-    await RADIO.audio.play();
-    RADIO.mode = "audio";
-    state.radio.mode = "audio";
-    state.radio.playing = true;
-    setRadioMeta(title || "Stream de áudio", sub || "Link direto");
-    setRadioStatus("Tocando áudio", "live");
-    updateRadioUI();
-    return true;
-  } catch (err) {
-    setRadioStatus("O navegador bloqueou ou recusou o áudio — clique em tocar", "err");
-    state.radio.playing = false;
-    updateRadioUI();
-    return false;
-  }
-}
-
-/* ---------- connect / controls ---------- */
-async function connectRadio() {
-  audioResume();
-  const input = $("#radio-url");
-  const url = (input && input.value ? input.value : state.radio.url || "").trim();
-  if (!url) {
-    setRadioStatus("Cole o link de uma playlist, vídeo ou stream", "err");
-    toast("Cole um link para conectar a rádio", "warn");
-    playClick("err");
-    return;
-  }
-  state.radio.url = url;
-  const source = state.radio.source;
-  const info = parsePlaylist(url);
-  stopRadioPlayback(true);
-  setRadioStatus("Conectando…", "idle");
-  setRadioMeta("Conectando…", source.toUpperCase());
-  playClick("tick");
-
-  if (source === "direct" || info.kind === "audio") {
-    if (info.kind === "unknown" && source === "direct") {
-      await playAudioUrl(url, decodeURIComponent((url.split("/").pop() || "Stream").slice(0, 60)), "Link direto");
-      return;
-    }
-    const title = decodeURIComponent((url.split("/").pop() || "Stream").split("?")[0]).slice(0, 60) || "Stream de áudio";
-    await playAudioUrl(url, title, "Link direto");
-    return;
-  }
-
-  if (info.kind === "unknown") {
-    setRadioStatus("Não reconheci este link. Confira o formato.", "err");
-    playClick("err");
-    return;
-  }
-  if (info.kind === "playlist" && !info.id) {
-    setRadioStatus("Playlist inválida", "err");
-    return;
-  }
-
-  if (source === "piped") {
-    await startPiped(info);
-    return;
-  }
-  if (info.host === "youtube.com" || source === "youtube") {
-    if (info.host !== "youtube.com") {
-      setRadioStatus("Esse link não é do YouTube — tentando pelo Piped", "idle");
-      await startPiped(info);
-      return;
-    }
-    const ok = await startYouTube(info);
-    if (!ok) {
-      setRadioStatus("Tentando o Piped como alternativa…", "idle");
-      await startPiped(info);
-    }
-    return;
-  }
-  await startPiped(info);
-}
-
-function stopRadioPlayback(silent) {
-  if (RADIO.audio) {
-    RADIO.audio.pause();
-    RADIO.audio.removeAttribute("src");
-    RADIO.audio.load();
-  }
-  if (RADIO.yt && RADIO.yt.stopVideo) {
-    try { RADIO.yt.stopVideo(); } catch (e) {}
-  }
+function radioStop() {
+  RADIO.playing = false;
   state.radio.playing = false;
-  if (!silent) {
-    state.radio.title = "Rádio desligada";
-    state.radio.sub = "Conecte uma playlist";
-    updateRadioUI();
-    setRadioStatus("Rádio desligada", "idle");
-  }
-}
-
-function radioToggle() {
-  audioResume();
-  if (state.radio.playing) {
-    if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.pauseVideo) RADIO.yt.pauseVideo();
-    else if (RADIO.audio) RADIO.audio.pause();
-    state.radio.playing = false;
-    updateRadioUI();
-    return;
-  }
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.playVideo) {
-    RADIO.yt.playVideo();
-    state.radio.playing = true;
-  } else if (RADIO.audio && RADIO.audio.src) {
-    RADIO.audio.play().then(() => { state.radio.playing = true; updateRadioUI(); }).catch(() => toast("Clique para liberar o áudio", "warn"));
-  } else {
-    const url = ($("#radio-url") && $("#radio-url").value) || state.radio.url;
-    if (url) connectRadio();
-    else { showPage("radio"); toast("Cole um link de playlist para começar"); }
-  }
+  if (RADIO.timer) { clearInterval(RADIO.timer); RADIO.timer = 0; }
   updateRadioUI();
 }
 
-function radioNext() {
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.nextVideo) {
-    try { RADIO.yt.nextVideo(); return; } catch (e) {}
-  }
-  if (state.radio.queue.length) playPipedTrack(state.radio.index + 1);
+function radioToggle() {
+  if (RADIO.playing) radioStop(); else { audioResume(); radioPlay(); }
+  playClick("tick");
 }
+
+function connectRadio() { audioResume(); radioPlay(); }
+
+function radioNext() {
+  RADIO.station = (RADIO.station + 1) % STATIONS.length;
+  state.radio.station = RADIO.station;
+  if (RADIO.playing) { RADIO.step = 0; RADIO.bar = 0; RADIO.nextTime = RADIO.ctx ? RADIO.ctx.currentTime + 0.05 : 0; }
+  updateRadioUI();
+  toast(radioStation().name + " · " + radioStation().genre, "ok");
+  playClick("tick");
+}
+
 function radioPrev() {
-  if (RADIO.mode === "youtube" && RADIO.yt && RADIO.yt.previousVideo) {
-    try { RADIO.yt.previousVideo(); return; } catch (e) {}
-  }
-  if (state.radio.queue.length) playPipedTrack(state.radio.index - 1);
+  RADIO.station = (RADIO.station + STATIONS.length - 1) % STATIONS.length;
+  state.radio.station = RADIO.station;
+  if (RADIO.playing) { RADIO.step = 0; RADIO.bar = 0; RADIO.nextTime = RADIO.ctx ? RADIO.ctx.currentTime + 0.05 : 0; }
+  updateRadioUI();
+  toast(radioStation().name + " · " + radioStation().genre, "ok");
+  playClick("tick");
+}
+
+function radioSelect(index) {
+  if (index === RADIO.station && RADIO.playing) { radioToggle(); return; }
+  RADIO.station = clamp(index, 0, STATIONS.length - 1);
+  state.radio.station = RADIO.station;
+  RADIO.step = 0; RADIO.bar = 0;
+  if (RADIO.ctx) RADIO.nextTime = RADIO.ctx.currentTime + 0.05;
+  audioResume();
+  radioPlay();
+  playClick("tick");
 }
 
 function radioVolume(value) {
-  state.radio.volume = clamp(value, 0, 1);
-  state.settings.music = state.radio.volume;
-  if (RADIO.audio) RADIO.audio.volume = state.radio.volume;
-  if (RADIO.yt && RADIO.yt.setVolume) { try { RADIO.yt.setVolume(Math.round(state.radio.volume * 100)); } catch (e) {} }
-  assignRange($("#radio-volume"), state.radio.volume * 100);
-  assignRange($("#set-music"), state.radio.volume * 100);
-  const label = $("#radio-volume-label");
-  if (label) label.textContent = String(Math.round(state.radio.volume * 100));
-  saveGame();
+  RADIO.volume = clamp(value, 0, 1);
+  state.radio.volume = RADIO.volume;
+  if (RADIO.out) RADIO.out.gain.setTargetAtTime(RADIO.volume, RADIO.ctx.currentTime, 0.05);
+  updateRadioVolumeUI();
 }
 
-/* ---------- UI ---------- */
-const ICON_PLAY = "#i-play", ICON_PAUSE = "#i-pause";
-function setIcon(btn, href) {
-  if (!btn) return;
-  const use = btn.querySelector("use");
-  if (use) use.setAttribute("href", href);
-}
-function updateRadioUI() {
-  const title = state.radio.title || "Nada tocando";
-  const sub = state.radio.sub || "Conecte uma playlist para começar";
-  const t1 = $("#radio-title"); if (t1) t1.textContent = title;
-  const t2 = $("#radio-sub"); if (t2) t2.textContent = sub;
-  const t3 = $("#hud-track"); if (t3) t3.textContent = state.radio.playing ? title : (state.radio.title && state.radio.title !== "Nada tocando" ? "Pausado · " + title : "Rádio desligado");
-  const t4 = $("#hud-radio-sub"); if (t4) t4.textContent = sub;
-  const home = $("#home-radio-title"); if (home) home.textContent = state.radio.playing ? title : "Desligada";
-  const homeSub = $("#home-radio-sub"); if (homeSub) homeSub.textContent = sub;
-  setIcon($("#radio-play"), state.radio.playing ? ICON_PAUSE : ICON_PLAY);
-  setIcon($("#hud-radio-play"), state.radio.playing ? ICON_PAUSE : ICON_PLAY);
-  const eqs = $$(".mini-eq");
-  eqs.forEach((e) => e.classList.toggle("live", state.radio.playing));
-  const cover = $("#radio-cover");
-  if (cover) cover.classList.toggle("spin", state.radio.playing);
-  const label = $("#radio-source-label");
-  if (label) {
-    label.textContent = state.radio.source === "piped" ? "PIPED · PLAYER PESSOAL" : state.radio.source === "direct" ? "STREAM · PLAYER PESSOAL" : "SAMPA FM · YOUTUBE";
-  }
-}
 function updateRadioVolumeUI() {
-  assignRange($("#radio-volume"), state.radio.volume * 100);
-  assignRange($("#set-music"), state.radio.volume * 100);
+  const v = Math.round(RADIO.volume * 100);
   const label = $("#radio-volume-label");
-  if (label) label.textContent = String(Math.round(state.radio.volume * 100));
+  if (label) label.textContent = String(v);
+  const slider = $("#radio-volume");
+  if (slider && String(slider.value) !== String(v)) slider.value = String(v);
+  const hud = $("#hud-radio-vol");
+  if (hud) hud.textContent = v + "%";
 }
 
-/* ---------- visualiser ---------- */
+function updateRadioUI() {
+  const st = radioStation();
+  const title = $("#radio-title");
+  if (title) title.textContent = RADIO.playing ? st.name : "Rádio desligada";
+  const sub = $("#radio-sub");
+  if (sub) sub.textContent = RADIO.playing ? st.genre + " · gerado ao vivo" : "Escolha uma estação para tocar";
+  const label = $("#radio-source-label");
+  if (label) label.textContent = "SAMPA FM · ESTAÇÕES DO JOGO";
+  const hudTitle = $("#hud-radio-title");
+  if (hudTitle) hudTitle.textContent = RADIO.playing ? st.name : "Rádio desligada";
+  const hudTrack = $("#hud-track");
+  if (hudTrack) hudTrack.textContent = RADIO.playing ? st.name : "Rádio desligado";
+  const hudEq = $("#hud-eq");
+  if (hudEq) hudEq.classList.toggle("playing", RADIO.playing);
+  const hudSub = $("#hud-radio-sub");
+  if (hudSub) hudSub.textContent = RADIO.playing ? st.genre : "Toque para sintonizar";
+  const homeTitle = $("#home-radio-title");
+  if (homeTitle) homeTitle.textContent = RADIO.playing ? st.name : "Desligado";
+  const homeSub = $("#home-radio-sub");
+  if (homeSub) homeSub.textContent = RADIO.playing ? st.genre : "4 estações de música eletrônica";
+  const eq = $("#home-eq");
+  if (eq) eq.classList.toggle("playing", RADIO.playing);
+  const status = $("#radio-status");
+  if (status) {
+    const tag = status.querySelector("b") || status.querySelector("span");
+    if (tag) tag.textContent = RADIO.playing ? "no ar" : "parada";
+    status.classList.toggle("on", RADIO.playing);
+  }
+  $$("#radio-stations .station").forEach((card, i) => {
+    card.classList.toggle("active", i === RADIO.station);
+    card.classList.toggle("playing", i === RADIO.station && RADIO.playing);
+  });
+  const playIcon = $("#radio-play");
+  if (playIcon) playIcon.classList.toggle("paused", !RADIO.playing);
+}
+
+function initRadio() {
+  RADIO.volume = clamp(state.settings.music !== undefined ? state.settings.music : 0.72, 0, 1);
+  state.radio.volume = RADIO.volume;
+  state.radio.playing = false;
+  state.radio.mode = null;
+  updateRadioUI();
+  updateRadioVolumeUI();
+}
+
+/* mantido por compatibilidade: nada é baixado da internet */
+function pollYouTubeTitle() {}
+function startPiped() {}
+function playAudioUrl() {}
+
+/* ---------- visualizador ---------- */
 function drawRadioViz(dt) {
   const canvas = $("#radio-viz");
   if (!canvas || !canvas.getContext) return;
@@ -422,39 +391,43 @@ function drawRadioViz(dt) {
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cw, ch);
-  RADIO.vizPhase += dt * (state.radio.playing ? 3.4 : 0.7);
-  RADIO.energy = damp(RADIO.energy, state.radio.playing ? 1 : 0.34, 2.4, dt);
-  const bars = Math.max(24, Math.min(64, Math.floor(cw / 11)));
+
+  let bins = null;
+  if (RADIO.analyser && RADIO.playing) {
+    RADIO.analyser.getByteFrequencyData(RADIO.data);
+    bins = RADIO.data;
+  }
+  RADIO.vizPhase += dt * (RADIO.playing ? 2.6 : 0.5);
+  const bars = Math.max(20, Math.min(56, Math.floor(cw / 12)));
   const base = ch * 0.9;
   const unit = cw / bars;
   for (let i = 0; i < bars; i++) {
-    const p = i / bars;
-    const wave =
-      Math.abs(Math.sin(p * 7.3 + RADIO.vizPhase * 1.6)) * 0.42 +
-      Math.abs(Math.sin(p * 17.7 + RADIO.vizPhase * 0.85)) * 0.3 +
-      Math.abs(Math.sin(p * 3.1 - RADIO.vizPhase * 2.2)) * 0.28;
-    const env = Math.sin(p * Math.PI) * 0.75 + 0.25;
-    const h = (5 + wave * env * ch * 0.52) * RADIO.energy;
+    let level;
+    if (bins) {
+      const idx = Math.floor(Math.pow(i / bars, 1.4) * (bins.length - 1));
+      level = bins[idx] / 255;
+    } else {
+      level = 0.06 + Math.abs(Math.sin(i * 0.4 + RADIO.vizPhase)) * 0.05;
+    }
+    const h = Math.max(3, Math.pow(level, 1.15) * ch * 0.72 + 3);
     const x = i * unit + unit * 0.22;
     const w = unit * 0.56;
     const g = ctx.createLinearGradient(0, base - h, 0, base);
     g.addColorStop(0, "rgba(211,251,104,.95)");
-    g.addColorStop(0.55, "rgba(160,240,190,.65)");
-    g.addColorStop(1, "rgba(121,230,221,.18)");
+    g.addColorStop(0.55, "rgba(160,240,190,.7)");
+    g.addColorStop(1, "rgba(121,230,221,.22)");
     ctx.fillStyle = g;
     roundRect(ctx, x, base - h, w, h, Math.min(w / 2, 3));
     ctx.fill();
-    /* reflection */
-    ctx.globalAlpha = 0.14;
-    const g2 = ctx.createLinearGradient(0, base, 0, base + h * 0.5);
-    g2.addColorStop(0, "rgba(121,230,221,.55)");
+    ctx.globalAlpha = 0.13;
+    const g2 = ctx.createLinearGradient(0, base, 0, base + h * 0.45);
+    g2.addColorStop(0, "rgba(121,230,221,.6)");
     g2.addColorStop(1, "rgba(121,230,221,0)");
     ctx.fillStyle = g2;
-    roundRect(ctx, x, base, w, h * 0.5, Math.min(w / 2, 3));
+    roundRect(ctx, x, base, w, h * 0.45, Math.min(w / 2, 3));
     ctx.fill();
     ctx.globalAlpha = 1;
   }
-  /* baseline */
   ctx.beginPath();
   ctx.moveTo(0, base + 0.5);
   ctx.lineTo(cw, base + 0.5);

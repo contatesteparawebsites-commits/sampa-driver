@@ -155,7 +155,7 @@ const CARS = {
 };
 
 const DEFAULTS = {
-  quality: "high", shadows: true, view: "far", traffic: "mid",
+  quality: "auto", shadows: true, view: "far", traffic: "mid",
   weather: "clear", timelapse: true, hour: 16, autolight: true,
   engine: true, sfx: 0.65, music: 0.72, ambient: true,
   assist: true, camera: "third", sens: 1, save: true, district: "paulista"

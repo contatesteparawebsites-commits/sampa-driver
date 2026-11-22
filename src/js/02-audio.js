@@ -39,24 +39,43 @@ function initAudio() {
     AUDIO.master = master;
     AUDIO.noiseBuffer = audioNoiseBuffer(ctx, 2.4);
 
-    /* --- engine --- */
+    /* --- engine (pilha harmônica + saturação) --- */
     const eg = ctx.createGain(); eg.gain.value = 0.0001;
-    const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 620; ef.Q.value = 1.6;
+    const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 700; ef.Q.value = 3.2;
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) {
+      const x = (i / 1023) * 2 - 1;
+      curve[i] = Math.tanh(x * 2.6);
+    }
+    shaper.curve = curve;
+    shaper.oversample = "2x";
     const osc1 = ctx.createOscillator(); osc1.type = "sawtooth"; osc1.frequency.value = 70;
-    const osc2 = ctx.createOscillator(); osc2.type = "square"; osc2.frequency.value = 35; osc2.detune.value = 6;
-    const osc3 = ctx.createOscillator(); osc3.type = "triangle"; osc3.frequency.value = 140;
-    const g1 = ctx.createGain(); g1.gain.value = 0.5;
-    const g2 = ctx.createGain(); g2.gain.value = 0.32;
-    const g3 = ctx.createGain(); g3.gain.value = 0.14;
-    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
-    g1.connect(ef); g2.connect(ef); g3.connect(ef);
-    /* intake air noise */
+    const osc2 = ctx.createOscillator(); osc2.type = "square"; osc2.frequency.value = 35; osc2.detune.value = 5;
+    const osc3 = ctx.createOscillator(); osc3.type = "sawtooth"; osc3.frequency.value = 141; osc3.detune.value = -7;
+    const osc4 = ctx.createOscillator(); osc4.type = "sine"; osc4.frequency.value = 17.5;
+    const g1 = ctx.createGain(); g1.gain.value = 0.44;
+    const g2 = ctx.createGain(); g2.gain.value = 0.3;
+    const g3 = ctx.createGain(); g3.gain.value = 0.16;
+    const g4 = ctx.createGain(); g4.gain.value = 0.55;
+    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3); osc4.connect(g4);
+    g1.connect(ef); g2.connect(ef); g3.connect(ef); g4.connect(ef);
+    ef.connect(shaper); shaper.connect(eg); eg.connect(master);
+    /* admissão */
     const air = ctx.createBufferSource(); air.buffer = AUDIO.noiseBuffer; air.loop = true;
-    const airF = ctx.createBiquadFilter(); airF.type = "bandpass"; airF.frequency.value = 900; airF.Q.value = 0.8;
+    const airF = ctx.createBiquadFilter(); airF.type = "bandpass"; airF.frequency.value = 900; airF.Q.value = 0.9;
     const airG = ctx.createGain(); airG.gain.value = 0;
     air.connect(airF); airF.connect(airG); airG.connect(eg);
-    ef.connect(eg); eg.connect(master);
-    osc1.start(); osc2.start(); osc3.start(); air.start();
+    /* turbo (só nos carros com biturbo) */
+    const turbo = ctx.createOscillator(); turbo.type = "sine"; turbo.frequency.value = 2600;
+    const turboG = ctx.createGain(); turboG.gain.value = 0;
+    turbo.connect(turboG); turboG.connect(eg);
+    /* escape: ruído grave com passa-banda */
+    const exh = ctx.createBufferSource(); exh.buffer = AUDIO.noiseBuffer; exh.loop = true;
+    const exhF = ctx.createBiquadFilter(); exhF.type = "bandpass"; exhF.frequency.value = 320; exhF.Q.value = 1.1;
+    const exhG = ctx.createGain(); exhG.gain.value = 0;
+    exh.connect(exhF); exhF.connect(exhG); exhG.connect(eg);
+    osc1.start(); osc2.start(); osc3.start(); osc4.start(); air.start(); turbo.start(); exh.start();
 
     /* --- wind --- */
     const wn = ctx.createBufferSource(); wn.buffer = AUDIO.noiseBuffer; wn.loop = true;
@@ -82,7 +101,7 @@ function initAudio() {
     const ag = ctx.createGain(); ag.gain.value = 0.05;
     an.connect(af); af.connect(ag); ag.connect(master); an.start();
 
-    AUDIO.engine = { gain: eg, filter: ef, osc1, osc2, osc3, g1, g2, g3, airG, airF };
+    AUDIO.engine = { gain: eg, filter: ef, osc1, osc2, osc3, osc4, g1, g2, g3, g4, shaper, airG, airF, turbo, turboG, exhG, exhF };
     AUDIO.wind = { gain: wg, filter: wf };
     AUDIO.tires = { gain: tg, filter: tf };
     AUDIO.rain = { gain: rg };
@@ -115,31 +134,55 @@ function applyAudioSettings() {
 /* rpm / throttle → engine timbre */
 function updateEngineAudio(dt) {
   if (!AUDIO.ctx || !AUDIO.engine) return;
+  const eng = AUDIO.engine;
+  const t = AUDIO.ctx.currentTime;
   if (!state.settings.engine || state.muted || !state.playing) {
-    AUDIO.engine.gain.gain.setTargetAtTime(0.0001, AUDIO.ctx.currentTime, 0.12);
-    AUDIO.wind.gain.gain.setTargetAtTime(0, AUDIO.ctx.currentTime, 0.15);
-    AUDIO.tires.gain.gain.setTargetAtTime(0, AUDIO.ctx.currentTime, 0.1);
+    eng.gain.gain.setTargetAtTime(0.0001, t, 0.12);
+    AUDIO.wind.gain.gain.setTargetAtTime(0, t, 0.15);
+    AUDIO.tires.gain.gain.setTargetAtTime(0, t, 0.1);
     return;
   }
-  const t = AUDIO.ctx.currentTime;
   const spec = CARS[state.car];
   const snd = spec.sound;
-  const rpmNorm = clamp((state.rpm - snd.idle) / (snd.redline - snd.idle), 0, 1.15);
-  const f = 26 + rpmNorm * 132 + (snd.style === "jeep" ? -4 : 0);
-  AUDIO.engine.osc1.frequency.setTargetAtTime(f, t, 0.055);
-  AUDIO.engine.osc2.frequency.setTargetAtTime(f * 0.5, t, 0.06);
-  AUDIO.engine.osc3.frequency.setTargetAtTime(f * 2.02, t, 0.05);
-  const open = 0.16 + state.throttle * 0.62 + rpmNorm * 0.24;
-  AUDIO.engine.filter.frequency.setTargetAtTime(340 + rpmNorm * 2100 + state.throttle * 500, t, 0.08);
-  AUDIO.engine.airG.gain.setTargetAtTime(0.05 + state.throttle * 0.16, t, 0.09);
-  const level = (0.035 + state.throttle * 0.05 + rpmNorm * 0.032) * (0.7 + open * 0.5) * (spec.sound.loud || 0.7);
-  AUDIO.engine.gain.gain.setTargetAtTime(level, t, 0.07);
+  const rpm = Math.max(snd.idle, state.rpm || snd.idle);
+  const rpmNorm = clamp((rpm - snd.idle) / (snd.redline - snd.idle), 0, 1.2);
+  const throttle = clamp(state.throttle || 0, 0, 1);
+  const load = clamp(throttle * 0.75 + rpmNorm * 0.45, 0, 1);
+
+  /* frequência de combustão: 4 cilindros ≈ rpm/30, 6 ≈ rpm/20 */
+  const cyl = snd.style === "flat6" ? 20 : snd.style === "boxer" ? 28 : 32;
+  const f = clamp(rpm / cyl, 22, 210);
+  const scoop = snd.style === "flat6" ? 1.12 : snd.style === "jeep" ? 0.92 : 1;
+  eng.osc1.frequency.setTargetAtTime(f * scoop, t, 0.035);
+  eng.osc2.frequency.setTargetAtTime(f * 0.5 * scoop, t, 0.04);
+  eng.osc3.frequency.setTargetAtTime(f * 2.02 * scoop, t, 0.03);
+  eng.osc4.frequency.setTargetAtTime(f * 0.25, t, 0.05);
+  eng.filter.frequency.setTargetAtTime(360 + rpmNorm * 2400 + throttle * 900, t, 0.05);
+  eng.filter.Q.setTargetAtTime(2.4 + throttle * 3.2, t, 0.1);
+  eng.airG.gain.setTargetAtTime(0.02 + throttle * 0.13 + rpmNorm * 0.03, t, 0.07);
+  eng.airF.frequency.setTargetAtTime(620 + rpmNorm * 1500, t, 0.12);
+  /* escape: mais grave e encorpado */
+  eng.exhG.gain.setTargetAtTime(0.02 + load * 0.07, t, 0.08);
+  eng.exhF.frequency.setTargetAtTime(180 + rpmNorm * 420, t, 0.15);
+  /* turbo assobiando só no biturbo */
+  if (snd.style === "flat6") {
+    eng.turbo.frequency.setTargetAtTime(1900 + rpmNorm * 3400, t, 0.08);
+    eng.turboG.gain.setTargetAtTime(state.throttle > 0.35 ? 0.004 + rpmNorm * 0.01 : 0, t, 0.12);
+  }
+
+  const level = (0.05 + throttle * 0.085 + rpmNorm * 0.05) * (snd.loud || 0.7);
+  eng.gain.gain.setTargetAtTime(level, t, 0.05);
+
+  /* estouro no corte de giro */
+  if (throttle < 0.08 && rpmNorm > 0.42 && Math.random() < 0.05) {
+    noiseBurst(0.05, 0.05, 900 + Math.random() * 900, 0.9);
+  }
 
   const sp = Math.abs(state.speed) * 3.6;
-  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.09, (sp / 240) * 0.075), t, 0.2);
-  AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.5, t, 0.2);
+  AUDIO.wind.gain.gain.setTargetAtTime(Math.min(0.08, (sp / 240) * 0.07), t, 0.2);
+  AUDIO.wind.filter.frequency.setTargetAtTime(300 + sp * 5.2, t, 0.2);
   const slip = state.slip || 0;
-  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.09, 0, 0.115), t, 0.07);
+  AUDIO.tires.gain.gain.setTargetAtTime(clamp(slip * 0.085, 0, 0.11), t, 0.07);
   AUDIO.tires.filter.frequency.setTargetAtTime(1700 + slip * 900, t, 0.1);
 }
 

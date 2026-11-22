@@ -160,14 +160,18 @@ range("#set-music", 30);
 range("#set-sens", 80);
 await wait(120);
 /* radio */
-click('#radio-tabs .tab[data-src="piped"]');
-const urlInput = doc.querySelector("#radio-url");
-if (urlInput) urlInput.value = "https://www.youtube.com/playlist?list=PL1234567890";
-click("#radio-connect");
-await wait(300);
-click("#radio-prev");
+const stations = doc.querySelectorAll("#radio-stations .station");
+if (stations.length !== 4) fail("esperava 4 estações, achei " + stations.length);
+click("#radio-stations .station:nth-child(2)");
+await wait(200);
+click("#radio-play");
+await wait(600);
+if (!win.SAMPA || win.SAMPA.state.radio.station !== 1) errors.push("estação não trocou: " + (win.SAMPA && win.SAMPA.state.radio.station));
 click("#radio-next");
+click("#radio-prev");
 range("#radio-volume", 55);
+click("#radio-play");
+await wait(200);
 /* mapa */
 click("#district-seg button:nth-child(2)");
 await wait(500);

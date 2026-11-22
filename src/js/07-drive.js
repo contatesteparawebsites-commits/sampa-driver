@@ -7,6 +7,20 @@ state.player = null;
 state.slip = 0;
 state.viewDist = 2400;
 
+function snapCamera() {
+  const g = PLAYER.model;
+  if (!g) return;
+  const root = g.root;
+  const back = state.camera === "first" ? -0.15 : 6.4;
+  const up = state.camera === "first" ? 1.12 : 2.5;
+  camera.position.set(
+    root.position.x + Math.sin(state.yaw) * back,
+    up,
+    root.position.z + Math.cos(state.yaw) * back
+  );
+  camera.lookAt(root.position.x, 1.1, root.position.z);
+}
+
 function spawnPlayerModel() {
   if (typeof ensureClearSpawn === "function") ensureClearSpawn(!PLAYER.model);
   if (PLAYER.group) {
@@ -24,6 +38,7 @@ function spawnPlayerModel() {
   PLAYER.bodyPitch = 0;
   state.player = { x: state.x, z: state.z };
   applyCameraMode(true);
+  snapCamera();
   updateCarHUD();
 }
 

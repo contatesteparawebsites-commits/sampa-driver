@@ -45,9 +45,9 @@ b,strong{font-weight:800}
 #world canvas{display:block;width:100%;height:100%;outline:none}
 #atmos{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:
-    radial-gradient(ellipse 120% 60% at 50% 105%,rgba(4,8,11,.55),transparent 62%),
-    radial-gradient(ellipse 90% 50% at 50% -10%,rgba(120,170,190,.12),transparent 60%);
-  mix-blend-mode:multiply;opacity:.9}
+    radial-gradient(ellipse 130% 42% at 50% 118%,rgba(6,12,16,.26),transparent 62%),
+    radial-gradient(ellipse 90% 50% at 50% -10%,rgba(120,170,190,.10),transparent 60%);
+  mix-blend-mode:multiply;opacity:.8}
 #rain-layer{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .5s;
   background:
     repeating-linear-gradient(101deg,transparent 0 7px,rgba(214,238,255,.16) 8px,rgba(214,238,255,.16) 9px,transparent 10px 23px);
@@ -646,3 +646,29 @@ body.touch .hints{display:none}
 .boot-mark .sp-emblem,.brand-emblem .sp-emblem{width:100%;height:100%}
 .brand-emblem{display:grid;place-items:center;width:22px;height:22px}
 .boot-mark{background:linear-gradient(160deg,#e9e4d6,#cfd8d2);color:#12201a}
+
+/* ---------- estações da rádio ---------- */
+.rad-head{display:flex;justify-content:space-between;align-items:center;font-size:8.5px;letter-spacing:.18em;
+  color:var(--muted);font-weight:800;margin-bottom:12px}
+.rad-head .tag-mini{display:flex;align-items:center;gap:6px;color:#9fb1b6;border:1px solid var(--line);
+  border-radius:999px;padding:4px 9px;font-size:8px;letter-spacing:.14em;text-transform:uppercase}
+.rad-head .tag-mini i{width:5px;height:5px;border-radius:50%;background:#5b6b71}
+.rad-head .tag-mini.on i{background:var(--lime);box-shadow:0 0 0 3px rgba(211,251,104,.16)}
+.station-list{display:grid;gap:8px;margin-bottom:14px}
+.station{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border-radius:13px;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--white);cursor:pointer;
+  transition:border-color .18s,background .18s,transform .18s}
+.station:hover{border-color:rgba(211,251,104,.4);background:rgba(211,251,104,.06);transform:translateX(3px)}
+.station.active{border-color:rgba(211,251,104,.55);background:rgba(211,251,104,.1)}
+.station b{display:block;font-size:12px;letter-spacing:.03em}
+.station small{display:block;color:#93a7ae;font-size:10px;margin-top:2px}
+.st-eq{display:flex;align-items:flex-end;gap:2px;width:18px;height:18px;flex:none}
+.st-eq i{flex:1;height:28%;border-radius:2px;background:var(--lime);opacity:.45;transition:height .2s}
+.station.playing .st-eq i{opacity:1;animation:eqBar .85s ease-in-out infinite}
+.station.playing .st-eq i:nth-child(2){animation-delay:.12s}
+.station.playing .st-eq i:nth-child(3){animation-delay:.26s}
+.station.playing .st-eq i:nth-child(4){animation-delay:.38s}
+@keyframes eqBar{0%,100%{height:22%}50%{height:100%}}
+.st-play{margin-left:auto;color:#7f959c;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  border:1px solid var(--line);flex:none}
+.station.active .st-play{color:#12200f;background:var(--lime);border-color:transparent}

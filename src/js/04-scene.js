@@ -126,14 +126,14 @@ function makeSurfaceTextures() {
   /* asphalt */
   {
     const c = cv(128, 128), x = c.getContext("2d");
-    x.fillStyle = "#4c5254"; x.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 2600; i++) {
-      const v = rndInt(50, 105);
-      x.fillStyle = "rgba(" + v + "," + v + "," + (v + 2) + "," + rnd(0.25, 0.7) + ")";
+    x.fillStyle = "#90959a"; x.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 2200; i++) {
+      const v = rndInt(105, 165);
+      x.fillStyle = "rgba(" + v + "," + v + "," + (v + 2) + "," + rnd(0.12, 0.4) + ")";
       x.fillRect(rnd(128), rnd(128), rnd(1, 2.4), rnd(1, 2.4));
     }
     for (let i = 0; i < 12; i++) {
-      x.strokeStyle = "rgba(30,32,34,.25)"; x.lineWidth = rnd(0.5, 1.4);
+      x.strokeStyle = "rgba(60,64,66,.18)"; x.lineWidth = rnd(0.5, 1.4);
       x.beginPath(); x.moveTo(rnd(128), 0); x.lineTo(rnd(128), 128); x.stroke();
     }
     TEXCACHE.asphalt = tex(c);
@@ -409,10 +409,21 @@ function onResize() {
   if (typeof resizeShowroom === "function") resizeShowroom();
 }
 
+function detectQuality() {
+  const cores = navigator.hardwareConcurrency || 4;
+  const mem = navigator.deviceMemory || 4;
+  const ua = navigator.userAgent || "";
+  if (/Android|iPhone|iPad|Mobile|Macintosh.*Safari(?!.*Chrome)/i.test(ua)) return "low";
+  if (cores <= 4 || mem <= 4) return "low";
+  if (cores <= 8 || mem <= 8) return "balanced";
+  return "high";
+}
+
 function setQuality(q) {
+  if (q === "auto") q = detectQuality();
   WORLD.quality = q;
   if (!renderer) return;
-  const ratio = q === "high" ? 1.7 : q === "balanced" ? 1.15 : 0.8;
+  const ratio = q === "high" ? 1.6 : q === "balanced" ? 1.05 : 0.85;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, ratio));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.shadowMap.enabled = !!state.settings.shadows && q !== "low";
@@ -422,7 +433,7 @@ function setQuality(q) {
     sunLight.shadow.mapSize.set(size, size);
     if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
   }
-  state.viewDist = state.settings.view === "far" ? 2400 : state.settings.view === "mid" ? 1700 : 1100;
+  state.viewDist = q === "low" ? 900 : state.settings.view === "far" ? 2400 : state.settings.view === "mid" ? 1700 : 1100;
   updateSkyLight();
   if (typeof buildCityDistant === "function") buildCityDistant();
 }
