@@ -634,7 +634,8 @@ async function boot() {
     /* o primeiro frame compila os shaders: libera o menu antes, para o boot não parecer travado */
     $("#boot").classList.add("done");
     setTimeout(() => { const b = $("#boot"); if (b) b.style.display = "none"; }, 700);
-    animateLoop();
+    /* deixa o navegador pintar o menu antes de compilar os shaders do primeiro frame */
+    setTimeout(() => { if (!state.loopStarted) { state.loopStarted = true; animateLoop(); } }, 16);
 
     bootStep(100, "Tudo pronto. Bom rolê!");
     toast("Bem-vindo a São Paulo. Escolha seu carro e caia na rua.", "ok");
